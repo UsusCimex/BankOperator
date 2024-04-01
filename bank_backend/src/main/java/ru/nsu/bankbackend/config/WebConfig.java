@@ -1,4 +1,4 @@
-package ru.nsu.bankbackend;
+package ru.nsu.bankbackend.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -8,7 +8,6 @@ import org.springframework.web.filter.CorsFilter;
 
 @Configuration
 public class WebConfig {
-
     @Bean
     public CorsFilter corsFilter() {
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
@@ -22,7 +21,4 @@ public class WebConfig {
         source.registerCorsConfiguration("/**", config); // Применить настройки ко всем путям
         return new CorsFilter(source);
     }
-
-
-
 }
