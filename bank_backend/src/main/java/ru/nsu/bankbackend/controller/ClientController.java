@@ -1,11 +1,14 @@
 package ru.nsu.bankbackend.controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import ru.nsu.bankbackend.dto.ClientDTO;
 import ru.nsu.bankbackend.model.Client;
 import ru.nsu.bankbackend.service.ClientService;
 
+import java.util.Collections;
 import java.util.List;
 
 @RestController
@@ -25,6 +28,19 @@ public class ClientController {
         return clientService.findById(id)
                 .map(ResponseEntity::ok)
                 .orElseGet(() -> ResponseEntity.notFound().build());
+    }
+
+    @PostMapping("/customQuery")
+    public ResponseEntity<?> executeCustomQuery(@RequestBody String queryJson) {
+        try {
+            ResponseEntity<?> response = clientService.executeCustomQuery(queryJson);
+            return response;
+        } catch (Exception e) {
+            System.out.println("Ошибка выполнения запроса: " + e.getMessage());
+            return ResponseEntity
+                    .status(HttpStatus.BAD_REQUEST)
+                    .body(Collections.singletonMap("error", "Произошла ошибка: " + e.getMessage()));
+        }
     }
 
     @PostMapping
