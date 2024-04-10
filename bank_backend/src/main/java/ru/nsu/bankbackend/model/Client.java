@@ -20,6 +20,16 @@ public class Client {
     @Column(name = "birth_date", nullable = false)
     private Date birthDate;
 
+    public Client() {}
+
+    public Client(Long id, Date birthDate, String contactInfo, String name, String passportData) {
+        this.id = id;
+        this.name = name;
+        this.contactInfo = contactInfo;
+        this.passportData = passportData;
+        this.birthDate = birthDate;
+    }
+
     public Long getId() {
         return id;
     }

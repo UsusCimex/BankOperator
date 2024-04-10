@@ -4,7 +4,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import ru.nsu.bankbackend.dto.ClientDTO;
 import ru.nsu.bankbackend.model.Client;
 import ru.nsu.bankbackend.service.ClientService;
 
@@ -33,8 +32,8 @@ public class ClientController {
     @PostMapping("/customQuery")
     public ResponseEntity<?> executeCustomQuery(@RequestBody String queryJson) {
         try {
-            ResponseEntity<?> response = clientService.executeCustomQuery(queryJson);
-            return response;
+            List<Client> response = clientService.executeCustomQuery(queryJson);
+            return ResponseEntity.ok(response);
         } catch (Exception e) {
             System.out.println("Ошибка выполнения запроса: " + e.getMessage());
             return ResponseEntity
@@ -49,24 +48,27 @@ public class ClientController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Client> updateClient(@PathVariable Long id, @RequestBody Client clientDetails) {
-        return clientService.findById(id)
-                .map(client -> {
-                    client.setName(clientDetails.getName());
-                    client.setContactInfo(clientDetails.getContactInfo());
-                    client.setPassportData(clientDetails.getPassportData());
-                    client.setBirthDate(clientDetails.getBirthDate());
-                    Client updatedClient = clientService.save(client);
-                    return ResponseEntity.ok(updatedClient);
-                }).orElseGet(() -> ResponseEntity.notFound().build());
+    public ResponseEntity<?> updateClient(@PathVariable Long id, @RequestBody Client clientDetails) {
+        try {
+            Client client = clientService.update(id, clientDetails);
+            return ResponseEntity.ok(client);
+        } catch (Exception e) {
+            System.out.println("Ошибка выполнения запроса: " + e.getMessage());
+            return ResponseEntity
+                    .status(HttpStatus.BAD_REQUEST)
+                    .body(Collections.singletonMap("error", "Произошла ошибка: " + e.getMessage()));
+        }
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<?> deleteClient(@PathVariable Long id) {
-        return clientService.findById(id)
-                .map(client -> {
-                    clientService.deleteById(client.getId());
-                    return ResponseEntity.ok().build();
-                }).orElseGet(() -> ResponseEntity.notFound().build());
+        try {
+            clientService.deleteById(id);
+            return ResponseEntity.ok().build();
+        } catch (Exception e) {
+            return ResponseEntity
+                    .notFound()
+                    .build();
+        }
     }
 }
