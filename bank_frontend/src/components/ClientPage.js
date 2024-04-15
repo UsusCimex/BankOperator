@@ -61,10 +61,17 @@ function ClientPage() {
     <div className="client-page">
       <h2 className="client-header">Client Details</h2>
       <div className="client-details">
-        <input className="input" name="name" value={client.name} onChange={handleChange} placeholder="Name" />
-        <input className="input" name="contactInfo" value={client.contactInfo} onChange={handleChange} placeholder="Contact Info" />
-        <input className="input" name="passportData" value={client.passportData} onChange={handleChange} placeholder="Passport Data" />
-        <input className="input" type="date" name="birthDate" value={client.birthDate} onChange={handleChange} />
+        <label htmlFor="name">Name:</label>
+        <input className="input" id="name" name="name" value={client.name} onChange={handleChange} placeholder="Name" />
+        
+        <label htmlFor="contactInfo">Contact Info:</label>
+        <input className="input" id="contactInfo" name="contactInfo" value={client.contactInfo} onChange={handleChange} placeholder="Contact Info" />
+        
+        <label htmlFor="passportData">Passport Data:</label>
+        <input className="input" id="passportData" name="passportData" value={client.passportData} onChange={handleChange} placeholder="Passport Data" />
+        
+        <label htmlFor="birthDate">Birth Date:</label>
+        <input className="input" id="birthDate" type="date" name="birthDate" value={client.birthDate} onChange={handleChange} />
       </div>
       <div className="buttons">
         <button className="button" onClick={handleUpdate}>Save Changes</button>

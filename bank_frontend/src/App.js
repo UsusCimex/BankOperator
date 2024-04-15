@@ -7,6 +7,7 @@ import Tariffs from './components/Tariffs';
 import Home from './components/Home';
 import './App.css';
 import ClientPage from './components/ClientPage';
+import { executeCustomQuery } from './services/CustomQueryService';
 
 import Button from '@mui/material/Button';
 import CreateIcon from '@mui/icons-material/Create';
@@ -14,10 +15,15 @@ import CreateIcon from '@mui/icons-material/Create';
 function QueryModal({ isOpen, onClose }) {
   const [query, setQuery] = useState('');
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    console.log("Form submitted with query:", query);
-    onClose();
+  const handleSubmit = async (e) => {
+      e.preventDefault();
+      try {
+          const result = await executeCustomQuery(query);
+          console.log(result);
+      } catch (error) {
+          console.error("Error:", error);
+      }
+      onClose();
   };
   
   if (!isOpen) return null;

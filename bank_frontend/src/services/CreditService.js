@@ -1,4 +1,4 @@
-const baseUrl = 'http://localhost:8080/api/credits'; // Обновите URL в соответствии с вашим сервером
+const baseUrl = 'http://localhost:8080/api/credits';
 
 export const getAllCredits = async () => {
   const response = await fetch(baseUrl);
