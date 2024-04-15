@@ -1,5 +1,6 @@
 package ru.nsu.bankbackend.model;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.persistence.*;
 
 import java.util.Date;
@@ -17,6 +18,7 @@ public class Client {
     private String contactInfo; // JSON
     @Column(name = "passport_data", nullable = false)
     private String passportData;
+    @JsonFormat(pattern="yyyy-MM-dd")
     @Column(name = "birth_date", nullable = false)
     private Date birthDate;
 

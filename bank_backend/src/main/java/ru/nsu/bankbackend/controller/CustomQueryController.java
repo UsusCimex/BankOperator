@@ -9,7 +9,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import ru.nsu.bankbackend.service.CustomQueryService;
 
-import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/custom")
@@ -18,13 +19,19 @@ public class CustomQueryController {
     private CustomQueryService customQueryService;
 
     @PostMapping("/query")
-    public ResponseEntity<?> executeCustomQuery(@RequestBody String query) {
+    public ResponseEntity<?> executeCustomQuery(@RequestBody String queryJson) {
         try {
-            // Возможная валидация запроса
-            List<?> result = customQueryService.execute(query);
-            return ResponseEntity.ok(result);
+            int count = customQueryService.execute(queryJson);
+            Map<String, Object> response = new HashMap<>();
+            response.put("message", "Запрос выполнен успешно.");
+            response.put("affectedRows", count);
+            return ResponseEntity.ok().body(response);
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
+            Map<String, String> errorMap = new HashMap<>();
+            errorMap.put("error", e.getMessage());
+            return ResponseEntity
+                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(errorMap);
         }
     }
 }
