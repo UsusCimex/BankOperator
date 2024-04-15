@@ -7,16 +7,12 @@ import jakarta.persistence.PersistenceContext;
 import jakarta.persistence.Query;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.expression.ExpressionException;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import ru.nsu.bankbackend.model.Client;
 import ru.nsu.bankbackend.repository.ClientRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import java.sql.Time;
-import java.sql.Timestamp;
-import java.time.format.DateTimeFormatter;
+import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -73,16 +69,17 @@ public class ClientService {
             throw new IllegalArgumentException("JSON должен содержать элемент 'query'.");
         }
 
-        String query = queryNode.asText().toLowerCase();
+        String query = queryNode.asText();
+        String testQuery = query.toLowerCase();
         System.out.println("Received query: " + query);
 
         // Базовая проверка FROM client
-        if (!query.contains("from client")) {
+        if (!testQuery.contains("from client")) {
             throw new IllegalArgumentException("Запрос должен содержать FROM client.");
         }
 
         // Проверка на запрещённые выражения для безопасности
-        if (query.contains("join") || query.contains("group by") || query.contains(";") || query.contains(",")) {
+        if (testQuery.contains("join") || testQuery.contains("group by") || testQuery.contains(";") || testQuery.contains(",")) {
             throw new IllegalArgumentException("JOIN, GROUP BY и использование ';' и ',' не разрешены.");
         }
 
@@ -92,16 +89,12 @@ public class ClientService {
         @SuppressWarnings("unchecked")
         List<Object[]> queryResult = nativeQuery.getResultList();
 
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
-
-        List<Client> result = queryResult.stream().map(obj -> new Client(
+        return queryResult.stream().map(obj -> new Client(
                 ((Number) obj[0]).longValue(),
-                (Timestamp) obj[1],
+                ((Date) obj[1]),
                 (String) obj[2],
                 (String) obj[3],
                 (String) obj[4]
         )).collect(Collectors.toList());
-
-        return result;
     }
 }
