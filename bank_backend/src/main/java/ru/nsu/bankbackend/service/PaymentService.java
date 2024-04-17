@@ -101,15 +101,15 @@ public class PaymentService {
         List<Object[]> queryResult = nativeQuery.getResultList();
 
         return queryResult.stream().map(obj -> {
-            Credit credit = creditRepository.findById((Long) obj[1])
+            Credit credit = creditRepository.findById((Long) obj[5])
                     .orElseThrow(() -> new RuntimeException("Credit not found"));
             return new Payment(
                     ((Number) obj[0]).longValue(),
-                    credit,
+                    (Long) obj[1],
                     (Long) obj[2],
                     (Date) obj[3],
                     (String) obj[4],
-                    (Long) obj[5]
+                    credit
             );
         }).collect(Collectors.toList());
     }

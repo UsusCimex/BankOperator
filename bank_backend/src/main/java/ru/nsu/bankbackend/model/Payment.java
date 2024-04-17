@@ -24,7 +24,7 @@ public class Payment {
     @Column(name = "commission")
     private Long commission;
 
-    public Payment(Long id, Credit credit, Long amount, Date paymentDate, String paymentType, Long commission) {
+    public Payment(Long id, Long amount, Long commission, Date paymentDate, String paymentType, Credit credit) {
         this.id = id;
         this.credit = credit;
         this.amount = amount;
