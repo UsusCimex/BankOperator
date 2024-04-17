@@ -51,7 +51,8 @@ public class ClientService {
                 .map(existingClient -> {
                     existingClient.setBirthDate(clientDetail.getBirthDate());
                     existingClient.setName(clientDetail.getName());
-                    existingClient.setContactInfo(clientDetail.getContactInfo());
+                    existingClient.setEmail(clientDetail.getEmail());
+                    existingClient.setPhone(clientDetail.getPhone());
                     existingClient.setPassportData(clientDetail.getPassportData());
                     return clientRepository.save(existingClient);
                 })
@@ -91,10 +92,11 @@ public class ClientService {
 
         return queryResult.stream().map(obj -> new Client(
                 ((Number) obj[0]).longValue(),
-                ((Date) obj[1]),
+                (Date) obj[1],
                 (String) obj[2],
                 (String) obj[3],
-                (String) obj[4]
+                (String) obj[4],
+                (String) obj[5]
         )).collect(Collectors.toList());
     }
 }

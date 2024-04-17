@@ -20,9 +20,22 @@ public class Payment {
     @Column(name = "payment_date", nullable = false)
     private Date paymentDate;
     @Column(name = "payment_type", nullable = false)
-    private String paymentType;
+    private String paymentType; // Тип платежа(Кредит, Наличка, Перевод)
     @Column(name = "commission")
     private Long commission;
+
+    public Payment(Long id, Credit credit, Long amount, Date paymentDate, String paymentType, Long commission) {
+        this.id = id;
+        this.credit = credit;
+        this.amount = amount;
+        this.paymentDate = paymentDate;
+        this.paymentType = paymentType;
+        this.commission = commission;
+    }
+
+    public Payment() {
+
+    }
 
     public void setId(Long id) {
         this.id = id;

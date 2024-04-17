@@ -14,8 +14,10 @@ public class Client {
 
     @Column(name = "name", nullable = false)
     private String name;
-    @Column(name = "contact_info")
-    private String contactInfo; // JSON
+    @Column(name = "email")
+    private String email;
+    @Column(name = "phone")
+    private String phone;
     @Column(name = "passport_data", nullable = false)
     private String passportData;
     @JsonFormat(pattern="yyyy-MM-dd")
@@ -24,10 +26,11 @@ public class Client {
 
     public Client() {}
 
-    public Client(Long id, Date birthDate, String contactInfo, String name, String passportData) {
+    public Client(Long id, Date birthDate, String email, String phone, String name, String passportData) {
         this.id = id;
         this.name = name;
-        this.contactInfo = contactInfo;
+        this.email = email;
+        this.phone = phone;
         this.passportData = passportData;
         this.birthDate = birthDate;
     }
@@ -48,12 +51,20 @@ public class Client {
         this.name = name;
     }
 
-    public String getContactInfo() {
-        return contactInfo;
+    public String getEmail() {
+        return email;
     }
 
-    public void setContactInfo(String contactInfo) {
-        this.contactInfo = contactInfo;
+    public void setEmail(String email) {
+        this.email = email;
+    }
+
+    public String getPhone() {
+        return phone;
+    }
+
+    public void setPhone(String phone) {
+        this.phone = phone;
     }
 
     public String getPassportData() {

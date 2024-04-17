@@ -4,41 +4,40 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import ru.nsu.bankbackend.model.Client;
-import ru.nsu.bankbackend.service.ClientService;
+import ru.nsu.bankbackend.model.Payment;
+import ru.nsu.bankbackend.service.PaymentService;
 
 import java.util.Collections;
 import java.util.List;
 
 @RestController
-@RequestMapping("/clients")
-public class ClientController {
-
+@RequestMapping("/payments")
+public class PaymentController {
     @Autowired
-    private ClientService clientService;
+    private PaymentService paymentService;
 
     @GetMapping
-    public List<Client> getAllClients() {
-        return clientService.findAll();
+    public List<Payment> getAllPayments() {
+        return paymentService.findAll();
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Client> getClientById(@PathVariable Long id) {
-        return clientService.findById(id)
+    public ResponseEntity<Payment> getPaymentById(@PathVariable Long id) {
+        return paymentService.findById(id)
                 .map(ResponseEntity::ok)
-                .orElseGet(() -> ResponseEntity.notFound().build());
+                .orElse(ResponseEntity.notFound().build());
     }
 
     @PostMapping
-    public Client createClient(@RequestBody Client client) {
-        return clientService.save(client);
+    public Payment createPayment(@RequestBody Payment payment) {
+        return paymentService.save(payment);
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<?> updateClient(@PathVariable Long id, @RequestBody Client clientDetails) {
+    public ResponseEntity<?> updatePayment(@PathVariable Long id, @RequestBody Payment paymentDetails) {
         try {
-            Client client = clientService.update(id, clientDetails);
-            return ResponseEntity.ok(client);
+            Payment payment = paymentService.update(id, paymentDetails);
+            return ResponseEntity.ok(payment);
         } catch (Exception e) {
             System.out.println("Ошибка выполнения запроса: " + e.getMessage());
             return ResponseEntity
@@ -48,21 +47,15 @@ public class ClientController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<?> deleteClient(@PathVariable Long id) {
-        try {
-            clientService.deleteById(id);
-            return ResponseEntity.ok().build();
-        } catch (Exception e) {
-            return ResponseEntity
-                    .notFound()
-                    .build();
-        }
+    public ResponseEntity<?> deletePayment(@PathVariable Long id) {
+        paymentService.deleteById(id);
+        return ResponseEntity.ok().build();
     }
 
     @PostMapping("/customQuery")
     public ResponseEntity<?> executeCustomQuery(@RequestBody String queryJson) {
         try {
-            List<Client> response = clientService.executeCustomQuery(queryJson);
+            List<Payment> response = paymentService.executeCustomQuery(queryJson);
             return ResponseEntity.ok(response);
         } catch (Exception e) {
             System.out.println("Ошибка выполнения запроса: " + e.getMessage());
