@@ -1,5 +1,13 @@
 const baseUrl = 'http://localhost:8080/clients';
 
+export const getAllClients = async () => {
+  const response = await fetch(baseUrl);
+  if (!response.ok) {
+    throw new Error('Failed to fetch credits');
+  }
+  return await response.json();
+};
+
 export const getClientById = async (id) => {
   const response = await fetch(`${baseUrl}/${id}`);
   if (!response.ok) {

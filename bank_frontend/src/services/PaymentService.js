@@ -1,55 +1,47 @@
-const baseUrl = 'http://localhost:8080/tariffs';
+const baseUrl = 'http://localhost:8080/payments';
 
-export const getAllTariffs = async () => {
-  const response = await fetch(baseUrl);
-  if (!response.ok) {
-    throw new Error('Failed to fetch tariffs');
-  }
-  return await response.json();
-};
-
-export const getTariffById = async (id) => {
+export const getPaymentById = async (id) => {
   const response = await fetch(`${baseUrl}/${id}`);
   if (!response.ok) {
-    throw new Error(`Failed to fetch tariff with id ${id}`);
+    throw new Error(`Failed to fetch payment with id ${id}`);
   }
   return await response.json();
 };
 
-export const createTariff = async (tariff) => {
+export const createPayment = async (payment) => {
   const response = await fetch(baseUrl, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
     },
-    body: JSON.stringify(tariff),
+    body: JSON.stringify(payment),
   });
   if (!response.ok) {
-    throw new Error('Failed to create tariff');
+    throw new Error('Failed to create payment');
   }
   return await response.json();
 };
 
-export const updateTariff = async (id, tariffDetails) => {
+export const updatePayment = async (id, paymentDetails) => {
   const response = await fetch(`${baseUrl}/${id}`, {
     method: 'PUT',
     headers: {
       'Content-Type': 'application/json',
     },
-    body: JSON.stringify(tariffDetails),
+    body: JSON.stringify(paymentDetails),
   });
   if (!response.ok) {
-    throw new Error(`Failed to update tariff with id ${id}`);
+    throw new Error(`Failed to update payment with id ${id}`);
   }
   return await response.json();
 };
 
-export const deleteTariff = async (id) => {
+export const deletePayment = async (id) => {
   const response = await fetch(`${baseUrl}/${id}`, {
     method: 'DELETE',
   });
   if (!response.ok) {
-    throw new Error(`Failed to delete tariff with id ${id}`);
+    throw new Error(`Failed to delete payment with id ${id}`);
   }
   return true;
 };
@@ -68,3 +60,4 @@ export const executeCustomQuery = async (query) => {
   }
   return await response.json();
 };
+

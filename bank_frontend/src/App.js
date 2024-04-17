@@ -1,12 +1,15 @@
 import React, { useState } from 'react';
 import { BrowserRouter as Router, Route, Routes, NavLink } from 'react-router-dom';
-import Clients from './components/Clients';
-import Credits from './components/Credits';
-import Payments from './components/Payments';
-import Tariffs from './components/Tariffs';
+import Clients from './components/Client/Clients';
+import Credits from './components/Credit/Credits';
+import Payments from './components/Payment/Payments';
+import Tariffs from './components/Tariff/Tariffs';
 import Home from './components/Home';
 import './App.css';
-import ClientPage from './components/ClientPage';
+import ClientPage from './components/Client/ClientPage';
+import CreditPage from './components/Credit/CreditPage';
+import TariffPage from './components/Tariff/TariffPage';
+import PaymentPage from './components/Payment/PaymentPage';
 import { executeCustomQuery } from './services/CustomQueryService';
 
 import Button from '@mui/material/Button';
@@ -77,8 +80,11 @@ function App() {
             <Route path="/clients" element={<Clients />} />
             <Route path="/clients/:clientId" element={<ClientPage />} />
             <Route path="/credits" element={<Credits />} />
+            <Route path="/credits/:creditId" element={<CreditPage />} />
             <Route path="/payments" element={<Payments />} />
+            <Route path="/payments/:paymentId" element={<PaymentPage />} />
             <Route path="/tariffs" element={<Tariffs />} />
+            <Route path="/tariffs/:tariffId" element={<TariffPage />} />
             <Route path="/" element={<Home />} />
           </Routes>
         </div>

@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { getClientById, updateClient, deleteClient } from '../services/ClientService';
-import './ClientPage.css';
+import { getClientById, updateClient, deleteClient } from '../../services/ClientService';
+import '../Page.css';
 
 function ClientPage() {
   const { clientId } = useParams();
@@ -64,8 +64,11 @@ function ClientPage() {
         <label htmlFor="name">Name:</label>
         <input className="input" id="name" name="name" value={client.name} onChange={handleChange} placeholder="Name" />
         
-        <label htmlFor="contactInfo">Contact Info:</label>
-        <input className="input" id="contactInfo" name="contactInfo" value={client.contactInfo} onChange={handleChange} placeholder="Contact Info" />
+        <label htmlFor="email">Email:</label>
+        <input className="input" id="email" name="email" value={client.email} onChange={handleChange} placeholder="Email" />
+
+        <label htmlFor="phone">Phone:</label>
+        <input className="input" id="phone" name="phone" value={client.phone} onChange={handleChange} placeholder="Phone" />
         
         <label htmlFor="passportData">Passport Data:</label>
         <input className="input" id="passportData" name="passportData" value={client.passportData} onChange={handleChange} placeholder="Passport Data" />

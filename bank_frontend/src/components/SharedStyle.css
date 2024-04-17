@@ -1,5 +1,5 @@
 /* Основной контейнер */
-.client-list {
+.element-list {
   display: flex;
   flex-wrap: wrap;
   gap: 20px;
@@ -58,7 +58,7 @@
 }
 
 /* Дополнительные стили для улучшения визуального отображения и доступности */
-.query-form input:focus, .client-form input:focus {
+.query-form input:focus, .element-form input:focus {
   outline: 2px solid #007bff; /* Выделение активного поля ввода */
 }
 
@@ -67,7 +67,7 @@
 }
 
 /* Стилизация карточек клиентов */
-.client-card {
+.element-card {
   border: 1px solid #ccc;
   border-radius: 8px;
   padding: 15px;
@@ -78,7 +78,7 @@
 }
 
 /* Стилизация кнопок внутри карточек */
-.client-card button {
+.element-card button {
   cursor: pointer;
   border: none;
   border-radius: 5px;
@@ -89,7 +89,7 @@
   color: white;
 }
 
-.client-card button:hover {
+.element-card button:hover {
   background-color: #0056b3;
 }
 
@@ -104,7 +104,7 @@
 }
 
 /* Кнопка добавления клиента */
-button.add-client-btn {
+button.add-element-btn {
   cursor: pointer;
   background-color: #28a745;
   color: white;
@@ -115,40 +115,40 @@ button.add-client-btn {
   margin-bottom: 20px;
 }
 
-button.add-client-btn:hover {
+button.add-element-btn:hover {
   background-color: #218838;
 }
 
 /* Стилизация формы */
-.client-form {
+.element-form {
   display: flex;
   flex-direction: column;
   gap: 10px;
   margin-bottom: 20px;
 }
 
-.client-form input, .client-form button {
+.element-form input, .element-form button {
   padding: 10px;
   border-radius: 5px;
   border: 1px solid #ccc;
 }
 
-.client-form button {
+.element-form button {
   background-color: #007bff;
   color: white;
   cursor: pointer;
 }
 
-.client-form button:hover {
+.element-form button:hover {
   background-color: #0056b3;
 }
 
 /* Отдельная кнопка для отмены в форме */
-.client-form button[type="button"] {
+.element-form button[type="button"] {
   background-color: #dc3545;
 }
 
-.client-form button[type="button"]:hover {
+.element-form button[type="button"]:hover {
   background-color: #c82333;
 }
 
@@ -174,4 +174,48 @@ button.add-client-btn:hover {
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
   border-radius: 10px;
   z-index: 1000;
+}
+
+/* React Select */
+.react-select-container {
+  min-height: 35px;
+  height: 35px;
+}
+
+.react-select__control {
+  background-color: white;
+  border: 1px solid #ccc;
+  box-shadow: none;
+  &:hover {
+      border-color: #aaa;
+  }
+}
+
+.react-select__value-container {
+  padding: 0 6px;
+}
+
+.react-select__input {
+  margin: 0px;
+}
+
+.react-select__indicator-separator {
+  display: none;
+}
+
+.react-select__indicators {
+  height: 35px;
+}
+
+.react-select__option {
+  color: black;
+  background-color: white;
+  &:hover, &:focus {
+      background-color: #0056b3;
+      color: white;
+  }
+}
+
+.react-select__menu {
+  z-index: 9999;
 }
