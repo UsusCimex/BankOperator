@@ -1,6 +1,8 @@
 package ru.nsu.bankbackend.model;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.Positive;
+import jakarta.validation.constraints.PositiveOrZero;
 
 @Entity
 public class Tariff {
@@ -12,10 +14,13 @@ public class Tariff {
 
     @Column(name = "name", nullable = false)
     private String name;
+    @Positive
     @Column(name = "loan_term", nullable = false)
     private Integer loanTerm; // Срок кредитования в месяцах
+    @PositiveOrZero
     @Column(name = "interest_rate", nullable = false)
     private Double interestRate; // Процентная ставка по тарифу
+    @Positive
     @Column(name = "max_amount", nullable = false)
     private Long maxAmount; // Максимальная сумма кредита
 

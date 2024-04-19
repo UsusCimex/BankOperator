@@ -1,12 +1,14 @@
 package ru.nsu.bankbackend.model;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.PastOrPresent;
+import jakarta.validation.constraints.Positive;
 
 import java.util.Date;
 
 @Entity
 public class Credit {
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "credit_id")
@@ -20,18 +22,27 @@ public class Credit {
     @JoinColumn(name = "tarif_id", referencedColumnName = "tariff_id", nullable = false)
     private Tariff tariff;
 
+    @Positive
     @Column(name = "amount", nullable = false)
     private Long amount; // Сумма кредита
-    @Column(name = "status", nullable = false)
-    private String status; // "Active", "Closed", "Expired"
 
+    public enum Status {
+        ACTIVE, CLOSED, EXPIRED
+    }
+    @Enumerated(EnumType.STRING)
+    @Column(name = "status", nullable = false)
+    private Status status;
+
+    @PastOrPresent
+    @JsonFormat(pattern="yyyy-MM-dd'T'HH:mm")
     @Column(name = "start_date")
     private Date startDate;
 
+    @JsonFormat(pattern="yyyy-MM-dd'T'HH:mm")
     @Column(name = "end_date")
     private Date endDate;
 
-    public Credit(Long id, Long amount, Date startDate, Date endDate, String status, Client client, Tariff tariff) {
+    public Credit(Long id, Long amount, Date endDate, Date startDate, Status status, Client client, Tariff tariff) {
         this.id = id;
         this.client = client;
         this.tariff = tariff;
@@ -44,6 +55,15 @@ public class Credit {
     public Credit() {
 
     }
+
+    public static Status convertStringToStatus(String statusStr) {
+        try {
+            return Status.valueOf(statusStr.toUpperCase());
+        } catch (IllegalArgumentException | NullPointerException e) {
+            throw new IllegalArgumentException("Invalid status value: " + statusStr);
+        }
+    }
+
 
     public void setId(Long id) {
         this.id = id;
@@ -77,11 +97,11 @@ public class Credit {
         this.amount = amount;
     }
 
-    public String getStatus() {
+    public Status getStatus() {
         return status;
     }
 
-    public void setStatus(String status) {
+    public void setStatus(Status status) {
         this.status = status;
     }
 

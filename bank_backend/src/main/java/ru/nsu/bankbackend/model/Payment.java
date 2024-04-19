@@ -1,6 +1,8 @@
 package ru.nsu.bankbackend.model;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.PastOrPresent;
 
 import java.util.Date;
 
@@ -17,6 +19,8 @@ public class Payment {
     private Credit credit;
     @Column(name = "amount", nullable = false)
     private Long amount;
+    @PastOrPresent
+    @JsonFormat(pattern="yyyy-MM-dd'T'HH:mm")
     @Column(name = "payment_date", nullable = false)
     private Date paymentDate;
     @Column(name = "payment_type", nullable = false)
