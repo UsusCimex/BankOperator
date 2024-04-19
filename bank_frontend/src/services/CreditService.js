@@ -37,6 +37,10 @@ export const createCredit = async (credit) => {
 };
 
 export const updateCredit = async (id, creditDetails) => {
+  if (!creditDetails.status) {
+    console.error('Status must be provided');
+    throw new Error('Status must be provided');
+  }
   const response = await fetch(`${baseUrl}/${id}`, {
     method: 'PUT',
     headers: {

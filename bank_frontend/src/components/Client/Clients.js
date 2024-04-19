@@ -7,7 +7,7 @@ import '../SharedStyle.css';
 function Clients() {
   const [clients, setClients] = useState([]);
   const [baseQuery] = useState("SELECT * FROM client");
-  const [userClientQuery, setuserClientQuery] = useState("");
+  const [userClientQuery, setUserClientQuery] = useState("");
   const [modalOpen, setModalOpen] = useState(false);
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
@@ -16,7 +16,7 @@ function Clients() {
   useEffect(() => {
     const savedQuery = sessionStorage.getItem('userClientQuery');
     const savedResults = sessionStorage.getItem('queryClientResults');
-    if (savedQuery) setuserClientQuery(savedQuery);
+    if (savedQuery) setUserClientQuery(savedQuery);
     if (savedResults) setClients(JSON.parse(savedResults));
   }, []);
 
@@ -65,7 +65,7 @@ function Clients() {
           <input 
             type="text" 
             value={userClientQuery} 
-            onChange={(e) => setuserClientQuery(e.target.value)} 
+            onChange={(e) => setUserClientQuery(e.target.value)} 
             placeholder="e.g., WHERE 1 = 1"
             className="user-query-input"
           />

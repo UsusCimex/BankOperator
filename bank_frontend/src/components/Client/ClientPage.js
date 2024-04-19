@@ -6,7 +6,7 @@ import '../Page.css';
 function ClientPage() {
   const { clientId } = useParams();
   const navigate = useNavigate();
-  const [client, setClient] = useState({ name: '', contactInfo: '', passportData: '', birthDate: '' });
+  const [client, setClient] = useState({ name: '', email: '', phone: '', passportData: '', birthDate: '' });
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);

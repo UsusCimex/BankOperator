@@ -1,47 +1,98 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import Select from 'react-select';
 import { getCreditById, updateCredit, deleteCredit } from '../../services/CreditService';
+import { getAllClients } from '../../services/ClientService';
+import { getAllTariffs } from '../../services/TariffService';
 import '../Page.css';
 
 function CreditPage() {
   const { creditId } = useParams();
   const navigate = useNavigate();
   const [credit, setCredit] = useState({
-    client: '',
-    tariff: '',
-    amount: 0,
+    client: null,
+    tariff: null,
+    amount: '',
     status: '',
-    startDate: '',
-    endDate: ''
+    startDate: ''
   });
-
+  const [clientsOptions, setClientsOptions] = useState([]);
+  const [tariffsOptions, setTariffsOptions] = useState([]);
+  const [statusOptions, setStatusOptions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  const fetchCredit = useCallback(async () => {
-    setLoading(true);
-    try {
-      const data = await getCreditById(creditId);
-      setCredit(data);
-      setError(null);
-    } catch (error) {
-      console.error("Failed to fetch credit details:", error);
-      setError("Failed to fetch credit details");
-    } finally {
-      setLoading(false);
+  useEffect(() => {
+    async function fetchClientsAndTariffs() {
+      setLoading(true);
+      try {
+        const clients = await getAllClients();
+        const clientOptions = clients.map(client => ({
+          value: client.id,
+          label: `${client.name} (phone: ${client.phone})`,
+          data: client
+        }));
+        const tariffs = await getAllTariffs();
+        const tariffOptions = tariffs.map(tariff => ({
+          value: tariff.id,
+          label: `${tariff.name}`,
+          data: tariff
+        }));
+        setStatusOptions([
+          { value: 'ACTIVE', label: 'Active' },
+          { value: 'CLOSED', label: 'Closed' },
+          { value: 'EXPIRED', label: 'Expired' }
+        ]);
+        setClientsOptions(clientOptions);
+        setTariffsOptions(tariffOptions);
+      } catch (error) {
+        console.error("Failed to fetch clients or tariffs:", error);
+        setError(error.message);
+      } finally {
+        setLoading(false);
+      }
     }
-  }, [creditId]);
+    fetchClientsAndTariffs();
+  }, []);
 
   useEffect(() => {
-    fetchCredit();
-  }, [fetchCredit]);
+    async function fetchCredit() {
+      if (loading || !statusOptions.length) return;
+      try {
+        const data = await getCreditById(creditId);
+        setCredit({
+          ...data,
+          client: data.client ? clientsOptions.find(c => c.value === data.client.id) : null,
+          tariff: data.tariff ? tariffsOptions.find(t => t.value === data.tariff.id) : null,
+          status: statusOptions.find(option => option.value === data.status).value || '',
+          startDate: data.startDate || ''
+        });
+      } catch (error) {
+        console.error("Failed to fetch credit details:", error);
+        setError(error.message);
+      }
+    }
+    if (clientsOptions.length > 0 && tariffsOptions.length > 0 && statusOptions.length > 0) {
+      fetchCredit();
+    }
+  }, [creditId, clientsOptions, tariffsOptions, statusOptions, loading]);
 
   const handleUpdate = async () => {
     try {
-      await updateCredit(creditId, credit);
+      const updatedCredit = {
+        ...credit,
+        client: credit.client?.data,
+        tariff: credit.tariff?.data,
+        status: credit.status
+      };
+  
+      console.log("Updating credit with data:", updatedCredit);
+  
+      await updateCredit(creditId, updatedCredit);
       alert('Credit updated successfully');
     } catch (error) {
       alert('Failed to update credit');
+      console.error(error);
     }
   };
 
@@ -60,6 +111,13 @@ function CreditPage() {
     setCredit(prevState => ({ ...prevState, [name]: value }));
   };
 
+  const handleSelectChange = (field, option) => {
+    setCredit(prevState => ({
+      ...prevState,
+      [field]: field === 'status' ? (option ? option.value : '') : (option ? option.data : null)
+    }));
+  };  
+
   if (loading) return <div>Loading...</div>;
   if (error) return <div>Error: {error}</div>;
   if (!credit) return <div>No credit data found.</div>;
@@ -69,22 +127,40 @@ function CreditPage() {
       <h2 className="credit-header">Credit Details</h2>
       <div className="credit-details">
         <label htmlFor="client">Client:</label>
-        <input className="input" id="client" name="client" value={credit.client} onChange={handleChange} placeholder="Client ID" />
-        
+        <Select
+          id="client"
+          name="client"
+          value={credit.client}
+          onChange={option => handleSelectChange('client', option)}
+          options={clientsOptions}
+          placeholder="Select Client"
+        />
+
         <label htmlFor="tariff">Tariff:</label>
-        <input className="input" id="tariff" name="tariff" value={credit.tariff} onChange={handleChange} placeholder="Tariff ID" />
+        <Select
+          id="tariff"
+          name="tariff"
+          value={credit.tariff}
+          onChange={option => handleSelectChange('tariff', option)}
+          options={tariffsOptions}
+          placeholder="Select Tariff"
+        />
 
         <label htmlFor="amount">Amount:</label>
         <input className="input" id="amount" name="amount" type="number" value={credit.amount} onChange={handleChange} placeholder="Amount" />
-        
-        <label htmlFor="status">Status:</label>
-        <input className="input" id="status" name="status" value={credit.status} onChange={handleChange} placeholder="Status" />
-        
-        <label htmlFor="startDate">Start Date:</label>
-        <input className="input" id="startDate" type="date" name="startDate" value={credit.startDate} onChange={handleChange} />
 
-        <label htmlFor="endDate">End Date:</label>
-        <input className="input" id="endDate" type="date" name="endDate" value={credit.endDate} onChange={handleChange} />
+        <label htmlFor="status">Status:</label>
+        <Select
+          id="status"
+          name="status"
+          value={statusOptions.find(option => option.value === credit.status)}
+          onChange={option => handleSelectChange('status', option)}
+          options={statusOptions}
+          placeholder="Select Status"
+        />
+
+        <label htmlFor="startDate">Start Date:</label>
+        <input className="input" id="startDate" type="datetime-local" name="startDate" value={credit.startDate} onChange={handleChange} />
       </div>
       <div className="buttons">
         <button className="button" onClick={handleUpdate}>Save Changes</button>

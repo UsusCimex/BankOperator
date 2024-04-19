@@ -80,7 +80,8 @@ function Payments() {
       <div className="element-list">
         {payments && payments.map(payment => (
           <div key={payment.id} className="element-card" onClick={() => handlePaymentClick(payment.id)}>
-            <p>Credit ID: {payment.credit?.id}</p>
+            <p>Client: {payment.credit?.client?.name}</p>
+            <p>Tariff: {payment.credit?.tariff?.name}</p>
             <p>Amount: {payment.amount}</p>
             <p>Payment Date: {payment.paymentDate}</p>
             <p>Payment Type: {payment.paymentType}</p>

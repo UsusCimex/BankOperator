@@ -10,6 +10,14 @@ export function AddCreditModal({ onClose, onCreditAdded }) {
   const [tariffsOptions, setTariffsOptions] = useState([]);
   const [selectedClient, setSelectedClient] = useState(null);
   const [selectedTariff, setSelectedTariff] = useState(null);
+  const [selectedStatus, setSelectedStatus] = useState(null);
+  const [startDate, setStartDate] = useState('');
+
+  const statusOptions = [
+    { value: 'ACTIVE', label: 'Active' },
+    { value: 'CLOSED', label: 'Closed' },
+    { value: 'EXPIRED', label: 'Expired' }
+  ];
 
   useEffect(() => {
     async function loadOptions() {
@@ -27,7 +35,8 @@ export function AddCreditModal({ onClose, onCreditAdded }) {
       client: { id: selectedClient.value },
       tariff: { id: selectedTariff.value },
       amount: event.target.amount.value,
-      status: event.target.status.value,
+      status: selectedStatus ? selectedStatus.value : '',
+      startDate: startDate,
     };
   
     try {
@@ -59,8 +68,16 @@ export function AddCreditModal({ onClose, onCreditAdded }) {
             options={tariffsOptions}
             placeholder="Select Tariff"
           />
+          <Select
+            classNamePrefix="react-select"
+            value={selectedStatus}
+            onChange={setSelectedStatus}
+            options={statusOptions}
+            placeholder="Select Status"
+          />
           <input type="number" name="amount" placeholder="Amount" required />
           <input type="text" name="status" placeholder="Status" required />
+          <input type="datetime-local" name="startDate" value={startDate} onChange={(e) => setStartDate(e.target.value)} required />
           <button type="submit">Add Credit</button>
           <button type="button" onClick={onClose}>Cancel</button>
         </form>

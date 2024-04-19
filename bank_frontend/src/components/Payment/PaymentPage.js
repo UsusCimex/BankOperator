@@ -1,6 +1,8 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import Select from 'react-select';
 import { getPaymentById, updatePayment, deletePayment } from '../../services/PaymentService';
+import { getAllCredits } from '../../services/CreditService';
 import '../Page.css';
 
 function PaymentPage() {
@@ -13,15 +15,31 @@ function PaymentPage() {
     paymentType: '',
     commission: 0
   });
+  const [creditsOptions, setCreditsOptions] = useState([]);
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+
+  const fetchCredits = useCallback(async () => {
+    try {
+      const credits = await getAllCredits();
+      const options = credits.map(credit => ({
+        value: credit.id,
+        label: `Client: ${credit.client?.name}, Tariff: ${credit.tariff?.name}, Amount: ${credit.amount}`,
+        data: credit
+      }));
+      setCreditsOptions(options);
+    } catch (error) {
+      console.error("Failed to fetch credits:", error);
+    }
+  }, []);
 
   const fetchPayment = useCallback(async () => {
     setLoading(true);
     try {
       const data = await getPaymentById(paymentId);
       setPayment(data);
+      fetchCredits();
       setError(null);
     } catch (error) {
       console.error("Failed to fetch payment details:", error);
@@ -29,7 +47,7 @@ function PaymentPage() {
     } finally {
       setLoading(false);
     }
-  }, [paymentId]);
+  }, [paymentId, fetchCredits]);
 
   useEffect(() => {
     fetchPayment();
@@ -59,6 +77,10 @@ function PaymentPage() {
     setPayment(prevState => ({ ...prevState, [name]: value }));
   };
 
+  const handleSelectChange = selectedOption => {
+    setPayment(prevState => ({ ...prevState, credit: selectedOption.data }));
+  };
+
   if (loading) return <div>Loading...</div>;
   if (error) return <div>Error: {error}</div>;
   if (!payment) return <div>No payment data found.</div>;
@@ -67,14 +89,20 @@ function PaymentPage() {
     <div className="payment-page">
       <h2 className="payment-header">Payment Details</h2>
       <div className="payment-details">
-        <label htmlFor="credit">Credit ID:</label>
-        <input className="input" id="credit" name="credit" value={payment.credit} onChange={handleChange} placeholder="Credit ID" />
+        <label htmlFor="credit">Credit:</label>
+        <Select
+          className="input"
+          value={creditsOptions.find(option => option.value === payment.credit.id)}
+          onChange={handleSelectChange}
+          options={creditsOptions}
+          placeholder="Select Credit"
+        />
         
         <label htmlFor="amount">Amount:</label>
         <input className="input" id="amount" name="amount" type="number" value={payment.amount} onChange={handleChange} placeholder="Amount" />
 
         <label htmlFor="paymentDate">Payment Date:</label>
-        <input className="input" id="paymentDate" type="date" name="paymentDate" value={payment.paymentDate} onChange={handleChange} />
+        <input className="input" id="paymentDate" type="datetime-local" name="paymentDate" value={payment.paymentDate} onChange={handleChange} />
 
         <label htmlFor="paymentType">Payment Type:</label>
         <input className="input" id="paymentType" name="paymentType" value={payment.paymentType} onChange={handleChange} placeholder="Payment Type" />

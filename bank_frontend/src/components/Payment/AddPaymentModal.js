@@ -49,7 +49,7 @@ export function AddPaymentModal({ onClose, onPaymentAdded }) {
               placeholder="Select Credit"
             />
             <input type="number" name="amount" placeholder="Amount" required />
-            <input type="date" name="paymentDate" placeholder="Payment Date" required />
+            <input type="datetime-local" name="paymentDate" placeholder="Payment Date" required />
             <input type="text" name="paymentType" placeholder="Payment Type" required />
             <input type="number" name="commission" placeholder="Commission" />
             <button type="submit">Add Payment</button>
