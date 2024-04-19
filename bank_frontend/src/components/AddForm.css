@@ -1,52 +1,91 @@
 /* AddForm.css */
-.client-page {
-  max-width: 600px;
-  margin: 20px auto;
+.modal-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw; /* Ensuring it spans the full viewport width */
+  height: 100vh; /* Full viewport height */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: rgba(0, 0, 0, 0.5);
+  overflow-x: hidden; /* Prevent horizontal scrolling */
+  z-index: 1050;
+}
+
+.modal {
+  background-color: white;
   padding: 20px;
-  border: 1px solid #ccc;
   border-radius: 8px;
-  background-color: #f9f9f9;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  width: 100%; /* Responsive width */
+  max-width: 500px; /* Limit the width */
+  box-sizing: border-box; /* Includes padding and border in the element's width */
 }
 
-.client-header {
-  margin-bottom: 20px;
+.modal-content {
+  overflow-y: auto;
+  overflow-x: hidden; /* Prevent horizontal overflow inside the modal */
+  max-height: 80vh; /* Limit the height to 80% of the viewport */
 }
 
-.client-details {
+/* Adjustments to ensure inputs do not exceed modal width */
+.modal input,
+.modal .react-select__control {
+  margin-bottom: 10px;
+  padding: 8px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  width: calc(100% - 16px); /* Subtract padding */
+  box-sizing: border-box; /* Include padding and border in width calculation */
+}
+
+/* Heading within the modal */
+.modal h2 {
+  color: #333;
+  margin-top: 0;
+}
+
+/* Form styles within the modal */
+.modal form {
   display: flex;
   flex-direction: column;
 }
 
-.client-detail {
-  margin: 10px 0;
-}
-
-.label {
-  font-weight: bold;
-}
-
-.buttons {
-  display: flex;
-  justify-content: space-between;
-  margin-top: 20px;
-}
-
-button {
-  padding: 10px 20px;
-  border: none;
-  border-radius: 4px;
-  background-color: #007bff;
-  color: white;
+/* Special styling for react-select components */
+.modal .react-select__control {
   cursor: pointer;
 }
 
-button:hover {
+/* Button styles within the form */
+.modal button {
+  padding: 10px;
+  margin-top: 10px;
+  cursor: pointer;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-size: 16px;
+}
+
+.modal button:hover {
   background-color: #0056b3;
 }
 
-.input {
-  padding: 10px;
-  margin-bottom: 10px;
-  border: 1px solid #ccc;
-  border-radius: 4px;
+/* Button for cancelling actions specifically styled to be less prominent */
+.modal button[type="button"] {
+  background-color: #6c757d;
+  margin-left: 5px;
 }
+
+.modal button[type="button"]:hover {
+  background-color: #5a6268;
+}
+
+/* Utility classes for layout and spacing */
+.element-form {
+  display: flex;
+  flex-direction: column;
+}
+

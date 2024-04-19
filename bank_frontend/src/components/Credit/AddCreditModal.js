@@ -12,6 +12,7 @@ export function AddCreditModal({ onClose, onCreditAdded }) {
   const [selectedTariff, setSelectedTariff] = useState(null);
   const [selectedStatus, setSelectedStatus] = useState(null);
   const [startDate, setStartDate] = useState('');
+  const [error, setError] = useState('');
 
   const statusOptions = [
     { value: 'ACTIVE', label: 'Active' },
@@ -20,40 +21,46 @@ export function AddCreditModal({ onClose, onCreditAdded }) {
   ];
 
   useEffect(() => {
-    async function loadOptions() {
-      const clients = await getAllClients();
-      const tariffs = await getAllTariffs();
-      setClientsOptions(clients.map(client => ({ value: client.id, label: client.name })));
-      setTariffsOptions(tariffs.map(tariff => ({ value: tariff.id, label: tariff.name })));
-    }
+    const loadOptions = async () => {
+      try {
+        const clients = await getAllClients();
+        const tariffs = await getAllTariffs();
+        setClientsOptions(clients.map(client => ({ value: client.id, label: client.name })));
+        setTariffsOptions(tariffs.map(tariff => ({ value: tariff.id, label: tariff.name })));
+      } catch (err) {
+        console.error('Failed to fetch options:', err);
+        setError('Failed to load options');
+      }
+    };
     loadOptions();
   }, []);
 
   const handleSubmit = async (event) => {
     event.preventDefault();
     const creditData = {
-      client: { id: selectedClient.value },
-      tariff: { id: selectedTariff.value },
+      client: selectedClient ? selectedClient.value : null,
+      tariff: selectedTariff ? selectedTariff.value : null,
       amount: event.target.amount.value,
       status: selectedStatus ? selectedStatus.value : '',
       startDate: startDate,
     };
-  
+
     try {
       await createCredit(creditData);
       onCreditAdded();
       onClose();
     } catch (error) {
       console.error('Failed to save credit:', error);
+      setError('Failed to save credit. Please try again.');
     }
   };
-   
 
   return (
-    <div className="modal-backdrop" onClick={(e) => e.target.className === 'modal-backdrop' && onClose()}>
+    <div className="modal-backdrop" onClick={(e) => e.target.className.includes('modal-backdrop') && onClose()}>
       <div className="modal" onClick={(e) => e.stopPropagation()}>
         <h2>Add New Credit</h2>
-        <form onSubmit={handleSubmit}>
+        {error && <div className="alert alert-danger">{error}</div>}
+        <form onSubmit={handleSubmit} className="element-form">
           <Select
             classNamePrefix="react-select"
             value={selectedClient}
@@ -76,10 +83,11 @@ export function AddCreditModal({ onClose, onCreditAdded }) {
             placeholder="Select Status"
           />
           <input type="number" name="amount" placeholder="Amount" required />
-          <input type="text" name="status" placeholder="Status" required />
           <input type="datetime-local" name="startDate" value={startDate} onChange={(e) => setStartDate(e.target.value)} required />
-          <button type="submit">Add Credit</button>
-          <button type="button" onClick={onClose}>Cancel</button>
+          <div className="form-buttons">
+            <button type="submit" className="button">Add Credit</button>
+            <button type="button" className="button" onClick={onClose}>Cancel</button>
+          </div>
         </form>
       </div>
     </div>
