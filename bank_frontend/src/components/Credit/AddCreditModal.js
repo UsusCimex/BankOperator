@@ -3,7 +3,7 @@ import Select from 'react-select';
 import { createCredit } from '../../services/CreditService';
 import { getAllClients } from '../../services/ClientService';
 import { getAllTariffs } from '../../services/TariffService';
-import '../SharedStyle.css';
+import '../AddForm.css';
 
 export function AddCreditModal({ onClose, onCreditAdded }) {
   const [clientsOptions, setClientsOptions] = useState([]);

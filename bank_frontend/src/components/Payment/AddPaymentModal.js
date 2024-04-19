@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import Select from 'react-select';
 import { createPayment } from '../../services/PaymentService';
 import { getAllCredits } from '../../services/CreditService';
-import '../SharedStyle.css';
+import '../AddForm.css';
 
 export function AddPaymentModal({ onClose, onPaymentAdded }) {
   const [creditsOptions, setCreditsOptions] = useState([]);

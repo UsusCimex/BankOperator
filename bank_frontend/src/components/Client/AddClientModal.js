@@ -1,6 +1,6 @@
 import React from 'react';
 import { createClient } from '../../services/ClientService';
-import '../SharedStyle.css';
+import '../AddForm.css';
 
 export function AddClientModal({ onClose, onClientAdded }) {
     const handleSubmit = async (event) => {

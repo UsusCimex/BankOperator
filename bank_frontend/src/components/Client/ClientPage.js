@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { getClientById, updateClient, deleteClient } from '../../services/ClientService';
-import '../Page.css';
+import '../DetailEdit.css';
 
 function ClientPage() {
   const { clientId } = useParams();

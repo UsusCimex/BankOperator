@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import Select from 'react-select';
 import { getPaymentById, updatePayment, deletePayment } from '../../services/PaymentService';
 import { getAllCredits } from '../../services/CreditService';
-import '../Page.css';
+import '../DetailEdit.css';
 
 function PaymentPage() {
   const { paymentId } = useParams();

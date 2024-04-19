@@ -1,6 +1,6 @@
 import React from 'react';
 import { createTariff } from '../../services/TariffService';
-import '../SharedStyle.css';
+import '../AddForm.css';
 
 export function AddTariffModal({ onClose, onTariffAdded }) {
   const handleSubmit = async (event) => {

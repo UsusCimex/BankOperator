@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { executeCustomQuery } from '../../services/ClientService';
 import { AddClientModal } from './AddClientModal'
-import '../SharedStyle.css';
+import '../ListView.css';
 
 function Clients() {
   const [clients, setClients] = useState([]);

@@ -4,7 +4,7 @@ import Select from 'react-select';
 import { getCreditById, updateCredit, deleteCredit } from '../../services/CreditService';
 import { getAllClients } from '../../services/ClientService';
 import { getAllTariffs } from '../../services/TariffService';
-import '../Page.css';
+import '../DetailEdit.css';
 
 function CreditPage() {
   const { creditId } = useParams();

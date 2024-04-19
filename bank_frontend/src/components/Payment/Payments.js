@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { executeCustomQuery } from '../../services/PaymentService';
 import { AddPaymentModal } from './AddPaymentModal'
-import '../SharedStyle.css';
+import '../ListView.css';
 
 function Payments() {
   const [payments, setPayments] = useState([]);

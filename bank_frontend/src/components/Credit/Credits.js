@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { executeCustomQuery } from '../../services/CreditService';
 import AddCreditModal from './AddCreditModal';
-import '../SharedStyle.css';
+import '../ListView.css';
 
 function Credits() {
   const [credits, setCredits] = useState([]);

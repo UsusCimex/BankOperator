@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { getTariffById, updateTariff, deleteTariff } from '../../services/TariffService';
-import '../Page.css';
+import '../DetailEdit.css';
 
 function TariffPage() {
   const { tariffId } = useParams();

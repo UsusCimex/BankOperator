@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { executeCustomQuery } from '../../services/TariffService';
 import { AddTariffModal } from './AddTariffModal'
-import '../SharedStyle.css';
+import '../ListView.css';
 
 function Tariffs() {
   const [tariffs, setTariffs] = useState([]);
