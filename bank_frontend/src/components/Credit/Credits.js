@@ -6,8 +6,8 @@ import '../ListView.css';
 
 function Credits() {
   const [credits, setCredits] = useState([]);
-  const [baseQuery] = useState("SELECT * FROM credit");
-  const [userCreditQuery, setuserCreditQuery] = useState("");
+  const baseQuery = "SELECT * FROM credit";
+  const [userCreditQuery, setUserCreditQuery] = useState("");
   const [modalOpen, setModalOpen] = useState(false);
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
@@ -16,17 +16,18 @@ function Credits() {
   useEffect(() => {
     const savedQuery = sessionStorage.getItem('userCreditQuery');
     const savedResults = sessionStorage.getItem('queryCreditResults');
-    if (savedQuery) setuserCreditQuery(savedQuery);
+    if (savedQuery) setUserCreditQuery(savedQuery);
     if (savedResults) setCredits(JSON.parse(savedResults));
   }, []);
 
-  const fetchCredits = async (customQuery) => {
+  const fetchCredits = async () => {
     setLoading(true);
+    const fullQuery = `${baseQuery} ${userCreditQuery}`;
     try {
-      const data = await executeCustomQuery(customQuery);
-      console.log("Received data:", data);
+      const data = await executeCustomQuery(fullQuery);
       setCredits(data || []);
       sessionStorage.setItem('queryCreditResults', JSON.stringify(data || []));
+      sessionStorage.setItem('userCreditQuery', userCreditQuery);
       setError(null);
     } catch (error) {
       console.error("Failed to fetch credit details:", error);
@@ -38,9 +39,7 @@ function Credits() {
 
   const handleSubmitQuery = (e) => {
     e.preventDefault();
-    const fullQuery = `${baseQuery} ${userCreditQuery}`;
-    fetchCredits(fullQuery);
-    sessionStorage.setItem('userCreditQuery', userCreditQuery);
+    fetchCredits();
   };
 
   const handleCreditClick = (creditId) => {
@@ -48,38 +47,38 @@ function Credits() {
   };
 
   const handleCreditAdded = () => {
-    fetchCredits(`${baseQuery} ${userCreditQuery}`);
+    fetchCredits();
   };
 
   return (
     <div>
       <h2>Credits</h2>
-      <form onSubmit={handleSubmitQuery} className="query-form">
-        <div className="query-inputs">
+      <form onSubmit={handleSubmitQuery} className="form-standard">
+        <div className="form-input-group">
           <input 
             type="text" 
             value={baseQuery} 
             disabled 
-            className="base-query-input"
+            className="base-query-input form-input"
           />
           <input 
             type="text" 
             value={userCreditQuery} 
-            onChange={(e) => setuserCreditQuery(e.target.value)} 
+            onChange={(e) => setUserCreditQuery(e.target.value)} 
             placeholder="e.g., WHERE 1 = 1"
-            className="user-query-input"
+            className="user-query-input form-input"
           />
         </div>
-        <small>You can use attributes like credit_id, client_id, tarif_id, amount, status, start_date, end_date in your WHERE clause.</small>
-        <button type="submit">Execute Query</button>
+        <small>You can use attributes like credit_id, client_id, tariff_id, amount, status, start_date, end_date in your WHERE clause.</small>
+        <button type="submit" className="form-button">Execute Query</button>
       </form>
-      <button onClick={() => setModalOpen(true)} className="add-element-btn">Add Credit</button>
+      <button onClick={() => setModalOpen(true)} className="button button-primary">Add Credit</button>
       {modalOpen && <AddCreditModal onClose={() => setModalOpen(false)} onCreditAdded={handleCreditAdded} />}
       {loading && <div>Loading...</div>}
-      {error && <div className="error-message">Error: {error}</div>}
-      <div className="element-list">
-        {credits && credits.map(credit => (
-          <div key={credit.id} className="element-card" onClick={() => handleCreditClick(credit.id)}>
+      {error && <div className="alert-danger">Error: {error}</div>}
+      <div className="list-container">
+        {credits.map(credit => (
+          <div key={credit.id} className="item-card" onClick={() => handleCreditClick(credit.id)}>
             <p>Client: {credit.client?.name}</p>
             <p>Tariff: {credit.tariff?.name}</p>
             <p>Amount: {credit.amount}</p>
