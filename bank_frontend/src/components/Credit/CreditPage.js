@@ -6,6 +6,12 @@ import { getAllClients } from '../../services/ClientService';
 import { getAllTariffs } from '../../services/TariffService';
 import '../DetailEdit.css';
 
+const statusOptions = [
+  { value: 'ACTIVE', label: 'Active' },
+  { value: 'CLOSED', label: 'Closed' },
+  { value: 'EXPIRED', label: 'Expired' }
+];
+
 function CreditPage() {
   const { creditId } = useParams();
   const navigate = useNavigate();
@@ -18,120 +24,115 @@ function CreditPage() {
   });
   const [clientsOptions, setClientsOptions] = useState([]);
   const [tariffsOptions, setTariffsOptions] = useState([]);
-  const [statusOptions, setStatusOptions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    async function fetchClientsAndTariffs() {
-      setLoading(true);
+    async function fetchData() {
       try {
-        const clients = await getAllClients();
-        const clientOptions = clients.map(client => ({
+        const [clients, tariffs] = await Promise.all([getAllClients(), getAllTariffs()]);
+        setClientsOptions(clients.map(client => ({
           value: client.id,
           label: `${client.name} (phone: ${client.phone})`,
           data: client
-        }));
-        const tariffs = await getAllTariffs();
-        const tariffOptions = tariffs.map(tariff => ({
+        })));
+        setTariffsOptions(tariffs.map(tariff => ({
           value: tariff.id,
           label: `${tariff.name}`,
           data: tariff
-        }));
-        setStatusOptions([
-          { value: 'ACTIVE', label: 'Active' },
-          { value: 'CLOSED', label: 'Closed' },
-          { value: 'EXPIRED', label: 'Expired' }
-        ]);
-        setClientsOptions(clientOptions);
-        setTariffsOptions(tariffOptions);
+        })));
+        setError(null);
       } catch (error) {
-        console.error("Failed to fetch clients or tariffs:", error);
-        setError(error.message);
+        setError("Failed to fetch clients or tariffs: " + error.message);
       } finally {
         setLoading(false);
       }
     }
-    fetchClientsAndTariffs();
+    fetchData();
   }, []);
 
   useEffect(() => {
     async function fetchCredit() {
-      if (loading || !statusOptions.length) return;
       try {
         const data = await getCreditById(creditId);
         setCredit({
           ...data,
-          client: data.client ? clientsOptions.find(c => c.value === data.client.id) : null,
-          tariff: data.tariff ? tariffsOptions.find(t => t.value === data.tariff.id) : null,
-          status: statusOptions.find(option => option.value === data.status).value || '',
+          client: clientsOptions.find(c => c.value === data.client.id) || null,
+          tariff: tariffsOptions.find(t => t.value === data.tariff.id) || null,
+          status: data.status || '',
           startDate: data.startDate || ''
         });
       } catch (error) {
-        console.error("Failed to fetch credit details:", error);
-        setError(error.message);
+        setError("Failed to fetch credit details: " + error.message);
       }
     }
-    if (clientsOptions.length > 0 && tariffsOptions.length > 0 && statusOptions.length > 0) {
+
+    if (!loading && clientsOptions.length > 0 && tariffsOptions.length > 0) {
       fetchCredit();
     }
-  }, [creditId, clientsOptions, tariffsOptions, statusOptions, loading]);
+  }, [creditId, clientsOptions, tariffsOptions, loading]);
 
   const handleUpdate = async () => {
+    const updatedCredit = {
+      ...credit,
+      client: credit.client?.data,
+      tariff: credit.tariff?.data,
+      status: credit.status
+    };
+
     try {
-      const updatedCredit = {
-        ...credit,
-        client: credit.client?.data,
-        tariff: credit.tariff?.data,
-        status: credit.status
-      };
-  
-      console.log("Updating credit with data:", updatedCredit);
-  
       await updateCredit(creditId, updatedCredit);
-      alert('Credit updated successfully');
+      alert('Client updated successfully');
+      navigate('/credits');
     } catch (error) {
-      alert('Failed to update credit');
-      console.error(error);
+      setError("Failed to update credit: " + error.message);
     }
   };
 
   const handleDelete = async () => {
     try {
       await deleteCredit(creditId);
-      alert('Credit deleted successfully');
       navigate('/credits');
     } catch (error) {
-      alert('Failed to delete credit');
+      setError("Failed to delete credit: " + error.message);
     }
   };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setCredit(prevState => ({ ...prevState, [name]: value }));
+    setCredit({ ...credit, [name]: value });
   };
 
-  const handleSelectChange = (field, option) => {
-    setCredit(prevState => ({
-      ...prevState,
-      [field]: field === 'status' ? (option ? option.value : '') : (option ? option.data : null)
-    }));
-  };  
+  const handleSelectChange = (name, selectedOption) => {
+    setCredit({ ...credit, [name]: selectedOption ? selectedOption.value : '' });
+  };
+
+  const dismissError = () => {
+    setError(null);
+  };
 
   if (loading) return <div>Loading...</div>;
-  if (error) return <div>Error: {error}</div>;
   if (!credit) return <div>No credit data found.</div>;
 
   return (
-    <div className="credit-page">
-      <h2 className="credit-header">Credit Details</h2>
-      <div className="credit-details">
-        <label htmlFor="client">Client:</label>
+    <div className="detail-page credit-page">
+      {error && (
+        <div className="alert alert-danger">
+          <button onClick={dismissError} className="close" title="Close">
+            &times;
+          </button>
+          {error}
+        </div>
+      )}
+
+      <h2 className="detail-header">Credit Details</h2>
+      <div className="detail-details">
+      <label htmlFor="client">Client:</label>
         <Select
           id="client"
           name="client"
           value={credit.client}
-          onChange={option => handleSelectChange('client', option)}
+          onChange={(option) => handleSelectChange('client', option)}
           options={clientsOptions}
           placeholder="Select Client"
         />
@@ -141,26 +142,41 @@ function CreditPage() {
           id="tariff"
           name="tariff"
           value={credit.tariff}
-          onChange={option => handleSelectChange('tariff', option)}
+          onChange={(option) => handleSelectChange('tariff', option)}
           options={tariffsOptions}
           placeholder="Select Tariff"
         />
 
         <label htmlFor="amount">Amount:</label>
-        <input className="input" id="amount" name="amount" type="number" value={credit.amount} onChange={handleChange} placeholder="Amount" />
+        <input
+          className="input"
+          id="amount"
+          name="amount"
+          type="number"
+          value={credit.amount}
+          onChange={handleChange}
+          placeholder="Amount"
+        />
 
         <label htmlFor="status">Status:</label>
         <Select
           id="status"
           name="status"
           value={statusOptions.find(option => option.value === credit.status)}
-          onChange={option => handleSelectChange('status', option)}
+          onChange={(option) => handleSelectChange('status', option)}
           options={statusOptions}
           placeholder="Select Status"
         />
 
         <label htmlFor="startDate">Start Date:</label>
-        <input className="input" id="startDate" type="datetime-local" name="startDate" value={credit.startDate} onChange={handleChange} />
+        <input
+          className="input"
+          id="startDate"
+          type="datetime-local"
+          name="startDate"
+          value={credit.startDate}
+          onChange={handleChange}
+        />
       </div>
       <div className="buttons">
         <button className="button" onClick={handleUpdate}>Save Changes</button>

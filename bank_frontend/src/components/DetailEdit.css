@@ -1,1 +1,91 @@
 /* DetailEdit.css */
+.detail-page {
+    padding: 20px;
+    background-color: #f8f8f8;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    max-width: 500px;
+    /* Or your desired fixed width */
+    margin: auto;
+    /* Center the form on the page */
+}
+
+.detail-header {
+    font-size: 24px;
+    color: #333;
+    margin-bottom: 20px;
+    text-align: center;
+    /* Centering the title */
+}
+
+.detail-details {
+    display: flex;
+    flex-direction: column;
+    /* Elements in a column */
+    row-gap: 10px;
+    /* Space between rows */
+}
+
+.input,
+.label {
+    display: block;
+    /* Ensures full width */
+    width: calc(100% - 16px);
+    /* Subtract padding/margins/borders if any */
+    margin-bottom: 8px;
+    /* Space between label and input */
+}
+
+.input {
+    padding: 8px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+
+.label {
+    font-weight: bold;
+}
+
+.buttons {
+    display: flex;
+    /* Align buttons in a row */
+    justify-content: space-evenly;
+    /* Even space between buttons */
+    margin-top: 20px;
+    /* Space above the button group */
+}
+
+.button {
+    padding: 10px 15px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.button:hover {
+    background-color: #0056b3;
+}
+
+.alert {
+    padding: 15px;
+    margin-bottom: 20px;
+    border: 1px solid transparent;
+    border-radius: 4px;
+}
+
+.alert-danger {
+    color: #a94442;
+    background-color: #f2dede;
+    border-color: #ebccd1;
+    position: relative;
+}
+
+.alert-dismissable .close {
+    position: absolute;
+    top: 0;
+    right: 0;
+    padding: 0.75rem 1.25rem;
+    color: inherit;
+}
