@@ -70,8 +70,8 @@ public class TariffService {
         System.out.println("Received query: " + query);
 
         // Базовая проверка FROM client
-        if (!testQuery.contains("from tariff")) {
-            throw new IllegalArgumentException("Запрос должен содержать FROM client.");
+        if (!testQuery.contains("select * from tariff")) {
+            throw new IllegalArgumentException("Запрос должен содержать SELECT * FROM tariff.");
         }
 
         // Проверка на запрещённые выражения для безопасности
@@ -81,8 +81,9 @@ public class TariffService {
 
         System.out.println("Executing Query: " + query);
 
-        Query nativeQuery = entityManager.createNativeQuery(query);
-        @SuppressWarnings("unchecked")
+        String sql = "SELECT t.tariff_id, t.interest_rate, t.loan_term, t.max_amount, t.name FROM tariff t" + query.substring(query.indexOf("FROM tariff") + "FROM tariff".length());
+
+        Query nativeQuery = entityManager.createNativeQuery(sql);
         List<Object[]> queryResult = nativeQuery.getResultList();
 
         return queryResult.stream().map(obj -> new Tariff(

@@ -5,9 +5,11 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.Past;
 import jakarta.validation.constraints.Pattern;
+import lombok.Data;
 
 import java.util.Date;
 
+@Data
 @Entity
 public class Client {
     @Id
@@ -33,60 +35,12 @@ public class Client {
 
     public Client() {}
 
-    public Client(Long id, Date birthDate, String email, String name, String passportData, String phone) {
+    public Client(Long id, String name, String email, String phone, String passportData, Date birthDate) {
         this.id = id;
         this.name = name;
         this.email = email;
         this.phone = phone;
         this.passportData = passportData;
-        this.birthDate = birthDate;
-    }
-
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public String getEmail() {
-        return email;
-    }
-
-    public void setEmail(String email) {
-        this.email = email;
-    }
-
-    public String getPhone() {
-        return phone;
-    }
-
-    public void setPhone(String phone) {
-        this.phone = phone;
-    }
-
-    public String getPassportData() {
-        return passportData;
-    }
-
-    public void setPassportData(String passportData) {
-        this.passportData = passportData;
-    }
-
-    public Date getBirthDate() {
-        return birthDate;
-    }
-
-    public void setBirthDate(Date birthDate) {
         this.birthDate = birthDate;
     }
 }

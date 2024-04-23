@@ -1,78 +1,42 @@
 package ru.nsu.bankbackend.model;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.PositiveOrZero;
+import lombok.Data;
 
+@Data
 @Entity
 public class Tariff {
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "tariff_id")
     private Long id;
 
-    @Column(name = "name", nullable = false)
+    @Column(name = "name")
+    @NotNull
     private String name;
     @Positive
-    @Column(name = "loan_term", nullable = false)
+    @Column(name = "loan_term")
+    @NotNull
     private Integer loanTerm; // Срок кредитования в месяцах
     @PositiveOrZero
-    @Column(name = "interest_rate", nullable = false)
+    @Column(name = "interest_rate")
+    @NotNull
     private Double interestRate; // Процентная ставка по тарифу
     @Positive
-    @Column(name = "max_amount", nullable = false)
+    @Column(name = "max_amount")
+    @NotNull
     private Long maxAmount; // Максимальная сумма кредита
+
+    public Tariff() {}
 
     public Tariff(Long id, Double interestRate, Integer loanTerm, Long maxAmount, String name) {
         this.id = id;
         this.name = name;
         this.loanTerm = loanTerm;
         this.interestRate = interestRate;
-        this.maxAmount = maxAmount;
-    }
-
-    public Tariff() {
-
-    }
-
-    public void setId(Long id) {
-        this.id = id;
-    }
-
-    public Long getId() {
-        return id;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public Integer getLoanTerm() {
-        return loanTerm;
-    }
-
-    public void setLoanTerm(Integer loanTerm) {
-        this.loanTerm = loanTerm;
-    }
-
-    public Double getInterestRate() {
-        return interestRate;
-    }
-
-    public void setInterestRate(Double interestRate) {
-        this.interestRate = interestRate;
-    }
-
-    public Long getMaxAmount() {
-        return maxAmount;
-    }
-
-    public void setMaxAmount(Long maxAmount) {
         this.maxAmount = maxAmount;
     }
 }

@@ -85,8 +85,8 @@ public class PaymentService {
         System.out.println("Received query: " + query);
 
         // Базовая проверка FROM client
-        if (!testQuery.contains("from payment")) {
-            throw new IllegalArgumentException("Запрос должен содержать FROM payment.");
+        if (!testQuery.contains("select * from payment")) {
+            throw new IllegalArgumentException("Запрос должен содержать SELECT * FROM payment.");
         }
 
         // Проверка на запрещённые выражения для безопасности
@@ -96,12 +96,13 @@ public class PaymentService {
 
         System.out.println("Executing Query: " + query);
 
-        Query nativeQuery = entityManager.createNativeQuery(query);
-        @SuppressWarnings("unchecked")
+        String sql = "SELECT p.payment_id, p.amount, p.commission, p.payment_date, p.payment_type, p.credit_id FROM payments p" + query.substring(query.indexOf("FROM payment") + "FROM payment".length());
+
+        Query nativeQuery = entityManager.createNativeQuery(sql);
         List<Object[]> queryResult = nativeQuery.getResultList();
 
         return queryResult.stream().map(obj -> {
-            Credit credit = creditRepository.findById((Long) obj[5])
+            Credit credit = creditRepository.findById(((Number) obj[5]).longValue())
                     .orElseThrow(() -> new RuntimeException("Credit not found"));
             return new Payment(
                     ((Number) obj[0]).longValue(),

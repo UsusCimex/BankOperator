@@ -12,6 +12,9 @@ import ru.nsu.bankbackend.model.Client;
 import ru.nsu.bankbackend.repository.ClientRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
@@ -61,7 +64,7 @@ public class ClientService {
 
     // Весьма опасненько...
     @Transactional
-    public List<Client> executeCustomQuery(String queryJson) throws JsonProcessingException {
+    public List<Client> executeCustomQuery(String queryJson) throws JsonProcessingException, NoSuchMethodException, InvocationTargetException, InstantiationException, IllegalAccessException {
         ObjectMapper objectMapper = new ObjectMapper();
         JsonNode rootNode = objectMapper.readTree(queryJson);
         JsonNode queryNode = rootNode.get("query");
@@ -75,8 +78,8 @@ public class ClientService {
         System.out.println("Received query: " + query);
 
         // Базовая проверка FROM client
-        if (!testQuery.contains("from client")) {
-            throw new IllegalArgumentException("Запрос должен содержать FROM client.");
+        if (!testQuery.contains("select * from client")) {
+            throw new IllegalArgumentException("Запрос должен содержать SELECT * FROM client.");
         }
 
         // Проверка на запрещённые выражения для безопасности
@@ -86,17 +89,20 @@ public class ClientService {
 
         System.out.println("Executing Query: " + query);
 
-        Query nativeQuery = entityManager.createNativeQuery(query);
-        @SuppressWarnings("unchecked")
+        String modifiedQuery = "SELECT c.client_id, c.name, c.email, c.phone, c.passport_data, c.birth_date FROM client c WHERE " + query.substring(query.indexOf("FROM client") + "FROM client".length());
+
+        Query nativeQuery = entityManager.createNativeQuery(modifiedQuery);
         List<Object[]> queryResult = nativeQuery.getResultList();
 
-        return queryResult.stream().map(obj -> new Client(
-                ((Number) obj[0]).longValue(),
-                (Date) obj[1],
-                (String) obj[2],
-                (String) obj[3],
-                (String) obj[4],
-                (String) obj[5]
-        )).collect(Collectors.toList());
+        return queryResult.stream().map(obj ->
+            new Client(
+                    ((Number) obj[0]).longValue(), // ID
+                    (String) obj[1],               // name
+                    (String) obj[2],               // email
+                    (String) obj[3],               // phone
+                    (String) obj[4],               // passport_data
+                    (Date) obj[5]                  // birth_date
+            )
+        ).collect(Collectors.toList());
     }
 }

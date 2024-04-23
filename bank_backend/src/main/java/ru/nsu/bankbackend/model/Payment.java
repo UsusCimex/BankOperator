@@ -2,10 +2,13 @@ package ru.nsu.bankbackend.model;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.PastOrPresent;
+import lombok.Data;
 
 import java.util.Date;
 
+@Data
 @Entity
 public class Payment {
 
@@ -15,18 +18,24 @@ public class Payment {
     private Long id;
 
     @ManyToOne
-    @JoinColumn(name = "credit_id", nullable = false)
+    @JoinColumn(name = "credit_id")
+    @NotNull
     private Credit credit;
-    @Column(name = "amount", nullable = false)
+    @Column(name = "amount")
+    @NotNull
     private Long amount;
     @PastOrPresent
     @JsonFormat(pattern="yyyy-MM-dd'T'HH:mm")
-    @Column(name = "payment_date", nullable = false)
+    @Column(name = "payment_date")
+    @NotNull
     private Date paymentDate;
-    @Column(name = "payment_type", nullable = false)
+    @Column(name = "payment_type")
+    @NotNull
     private String paymentType; // Тип платежа(Кредит, Наличка, Перевод)
     @Column(name = "commission")
     private Long commission;
+
+    public Payment() {}
 
     public Payment(Long id, Long amount, Long commission, Date paymentDate, String paymentType, Credit credit) {
         this.id = id;
@@ -34,58 +43,6 @@ public class Payment {
         this.amount = amount;
         this.paymentDate = paymentDate;
         this.paymentType = paymentType;
-        this.commission = commission;
-    }
-
-    public Payment() {
-
-    }
-
-    public void setId(Long id) {
-        this.id = id;
-    }
-
-    public Long getId() {
-        return id;
-    }
-
-    public Credit getCredit() {
-        return credit;
-    }
-
-    public void setCredit(Credit credit) {
-        this.credit = credit;
-    }
-
-    public Long getAmount() {
-        return amount;
-    }
-
-    public void setAmount(Long amount) {
-        this.amount = amount;
-    }
-
-    public Date getPaymentDate() {
-        return paymentDate;
-    }
-
-    public void setPaymentDate(Date paymentDate) {
-        this.paymentDate = paymentDate;
-    }
-
-    public String getPaymentType() {
-        return paymentType;
-    }
-
-    public void setPaymentType(String paymentType) {
-        this.paymentType = paymentType;
-    }
-
-    public Long getCommission() {
-        return commission;
-    }
-
-    public void setCommission(Long commission) {
         this.commission = commission;
     }
 }

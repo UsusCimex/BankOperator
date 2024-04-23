@@ -108,8 +108,8 @@ public class CreditService {
         System.out.println("Received query: " + query);
 
         // Базовая проверка FROM client
-        if (!testQuery.contains("from credit")) {
-            throw new IllegalArgumentException("Запрос должен содержать FROM credit.");
+        if (!testQuery.contains("select * from credit")) {
+            throw new IllegalArgumentException("Запрос должен содержать SELECT * FROM credit.");
         }
 
         // Проверка на запрещённые выражения для безопасности
@@ -119,14 +119,15 @@ public class CreditService {
 
         System.out.println("Executing Query: " + query);
 
-        Query nativeQuery = entityManager.createNativeQuery(query);
-        @SuppressWarnings("unchecked")
+        String sql = "SELECT c.credit_id, c.amount, c.end_date, c.start_date, c.status, c.client_id, c.tarif_id FROM credits c WHERE " + query.substring(query.indexOf("FROM credit") + "FROM credit".length());
+
+        Query nativeQuery = entityManager.createNativeQuery(sql);
         List<Object[]> queryResult = nativeQuery.getResultList();
 
         return queryResult.stream().map(obj -> {
-            Client client = clientRepository.findById((Long) obj[5])
+            Client client = clientRepository.findById(((Number) obj[5]).longValue())
                     .orElseThrow(() -> new RuntimeException("Client not found"));
-            Tariff tariff = tariffRepository.findById((Long) obj[6])
+            Tariff tariff = tariffRepository.findById(((Number) obj[6]).longValue())
                     .orElseThrow(() -> new RuntimeException("Tariff not found"));
             return new Credit(
                     ((Number) obj[0]).longValue(),
