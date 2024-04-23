@@ -1,71 +1,55 @@
-const baseUrl = 'http://localhost:8080/clients';
+import api from '../authorization/AxiosApi';
 
 export const getAllClients = async () => {
-  const response = await fetch(baseUrl);
-  if (!response.ok) {
-    throw new Error('Failed to fetch credits');
+  try {
+    const response = await api.get('/clients');
+    return response.data;
+  } catch (error) {
+    throw new Error('Failed to fetch clients', error);
   }
-  return await response.json();
 };
 
 export const getClientById = async (id) => {
-  const response = await fetch(`${baseUrl}/${id}`);
-  if (!response.ok) {
-    throw new Error(`Failed to fetch client with id ${id}`);
+  try {
+    const response = await api.get(`/clients/${id}`);
+    return response.data;
+  } catch (error) {
+    throw new Error(`Failed to fetch client with id ${id}`, error);
   }
-  return await response.json();
 };
 
 export const createClient = async (client) => {
-  const response = await fetch(baseUrl, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(client),
-  });
-  if (!response.ok) {
-    throw new Error('Failed to create client');
+  try {
+    const response = await api.post('/clients', client); 
+    return response.data;
+  } catch (error) {
+    throw new Error('Failed to create client', error);
   }
-  return await response.json();
 };
 
 export const updateClient = async (id, clientDetails) => {
-  const response = await fetch(`${baseUrl}/${id}`, {
-    method: 'PUT',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(clientDetails),
-  });
-  if (!response.ok) {
-    throw new Error(`Failed to update client with id ${id}`);
+  try {
+    const response = await api.put(`/clients/${id}`, clientDetails); 
+    return response.data;
+  } catch (error) {
+    throw new Error(`Failed to update client with id ${id}`, error);
   }
-  return await response.json();
 };
 
 export const deleteClient = async (id) => {
-  const response = await fetch(`${baseUrl}/${id}`, {
-    method: 'DELETE',
-  });
-  if (!response.ok) {
-    throw new Error(`Failed to delete client with id ${id}`);
+  try {
+    await api.delete(`/clients/${id}`); 
+    return true;
+  } catch (error) {
+    throw new Error(`Failed to delete client with id ${id}`, error);
   }
-  return true;
 };
 
 export const executeCustomQuery = async (query) => {
-  const response = await fetch(`${baseUrl}/customQuery`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({ query }),
-  });
-  if (!response.ok) {
-    const errorData = await response.json();
-    throw new Error(errorData.error || 'Failed to execute custom query');
+  try {
+    const response = await api.post('/clients/customQuery', { query }); 
+    return response.data;
+  } catch (error) {
+    throw new Error('Failed to execute custom query', error);
   }
-  return await response.json();
 };
-

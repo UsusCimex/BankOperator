@@ -1,23 +1,14 @@
-const baseUrl = 'http://localhost:8080/api/custom';
+import api from '../authorization/AxiosApi'
 
 export const executeCustomQuery = async (query) => {
     try {
-        const response = await fetch(`${baseUrl}/query`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ query }),
-        });
-
-        if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.error || 'Failed to execute custom query');
-        }
-
-        return await response.json();
+        const response = await api.post('/api/custom/query', { query }); 
+        return response.data;
     } catch (error) {
-        console.error(error);
+        console.error('Failed to execute custom query:', error);
+        if (error.response && error.response.data) {
+            throw new Error(error.response.data.error || 'Failed to execute custom query');
+        }
         throw error;
     }
 };

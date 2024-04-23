@@ -11,27 +11,30 @@ import java.util.Date;
 @Data
 @Entity
 public class Payment {
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "payment_id")
     private Long id;
 
     @ManyToOne
+    @NotNull
     @JoinColumn(name = "credit_id")
-    @NotNull
     private Credit credit;
-    @Column(name = "amount")
+
     @NotNull
+    @Column(name = "amount")
     private Long amount;
+
     @PastOrPresent
     @JsonFormat(pattern="yyyy-MM-dd'T'HH:mm")
+    @NotNull
     @Column(name = "payment_date")
-    @NotNull
     private Date paymentDate;
-    @Column(name = "payment_type")
+
     @NotNull
+    @Column(name = "payment_type")
     private String paymentType; // Тип платежа(Кредит, Наличка, Перевод)
+
     @Column(name = "commission")
     private Long commission;
 

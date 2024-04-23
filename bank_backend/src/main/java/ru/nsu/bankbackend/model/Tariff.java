@@ -14,20 +14,23 @@ public class Tariff {
     @Column(name = "tariff_id")
     private Long id;
 
-    @Column(name = "name")
     @NotNull
+    @Column(name = "name", unique = true)
     private String name;
+
     @Positive
+    @NotNull
     @Column(name = "loan_term")
-    @NotNull
     private Integer loanTerm; // Срок кредитования в месяцах
+
     @PositiveOrZero
+    @NotNull
     @Column(name = "interest_rate")
-    @NotNull
     private Double interestRate; // Процентная ставка по тарифу
+
     @Positive
-    @Column(name = "max_amount")
     @NotNull
+    @Column(name = "max_amount")
     private Long maxAmount; // Максимальная сумма кредита
 
     public Tariff() {}

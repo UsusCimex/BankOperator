@@ -11,6 +11,7 @@ import CreditPage from './components/Credit/CreditPage';
 import TariffPage from './components/Tariff/TariffPage';
 import PaymentPage from './components/Payment/PaymentPage';
 import { executeCustomQuery } from './services/CustomQueryService';
+import PrivateRoute from './authorization/PrivateRoute';
 
 import Button from '@mui/material/Button';
 import CreateIcon from '@mui/icons-material/Create';
@@ -50,6 +51,12 @@ function QueryModal({ isOpen, onClose }) {
 
 function App() {
   const [isQueryModalOpen, setQueryModalOpen] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+
+  const handleLogin = (token) => {
+    localStorage.setItem('token', token);
+    setIsAuthenticated(true);
+  };
 
   return (
     <Router>
@@ -64,6 +71,7 @@ function App() {
               <NavLink className="nav-link" to="/tariffs">Tariffs</NavLink>
             </div>
           </div>
+          {isAuthenticated && 
           <div className="query-modal-btn-container">
             <Button
               variant="contained"
@@ -73,24 +81,27 @@ function App() {
             > SQL Query
             </Button>
           </div>
+          }
         </nav>
         <QueryModal isOpen={isQueryModalOpen} onClose={() => setQueryModalOpen(false)} />
         <div className="content">
           <Routes>
-            <Route path="/clients" element={<Clients />} />
-            <Route path="/clients/:clientId" element={<ClientPage />} />
-            <Route path="/credits" element={<Credits />} />
-            <Route path="/credits/:creditId" element={<CreditPage />} />
-            <Route path="/payments" element={<Payments />} />
-            <Route path="/payments/:paymentId" element={<PaymentPage />} />
-            <Route path="/tariffs" element={<Tariffs />} />
-            <Route path="/tariffs/:tariffId" element={<TariffPage />} />
-            <Route path="/" element={<Home />} />
+            <Route path="/" element={<Home isAuthenticated={isAuthenticated} onLogin={handleLogin} />} />
+            <Route element={<PrivateRoute isAuthenticated={isAuthenticated} />}>
+              <Route path="/clients" element={<Clients />} />
+              <Route path="/clients/:clientId" element={<ClientPage />} />
+              <Route path="/credits" element={<Credits />} />
+              <Route path="/credits/:creditId" element={<CreditPage />} />
+              <Route path="/payments" element={<Payments />} />
+              <Route path="/payments/:paymentId" element={<PaymentPage />} />
+              <Route path="/tariffs" element={<Tariffs />} />
+              <Route path="/tariffs/:tariffId" element={<TariffPage />} />
+            </Route>
           </Routes>
         </div>
       </div>
     </Router>
-  )
+  );
 }
 
 export default App;

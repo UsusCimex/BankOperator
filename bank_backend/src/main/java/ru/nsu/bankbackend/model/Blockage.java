@@ -15,13 +15,15 @@ public class Blockage {
     private Long id;
 
     @OneToOne
+    @NotNull
     @JoinColumn(name = "client_id")
-    @NotNull
     private Client client;
+
+    @NotNull
     @Column(name = "start_date")
-    @NotNull
     private Date startDate;
-    @Column(name = "end_date")
+
     @NotNull
+    @Column(name = "end_date")
     private Date endDate;
 }

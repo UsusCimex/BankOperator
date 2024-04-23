@@ -18,26 +18,26 @@ public class Credit {
     private Long id;
 
     @ManyToOne
-    @JoinColumn(name = "client_id", referencedColumnName = "client_id")
     @NotNull
+    @JoinColumn(name = "client_id", referencedColumnName = "client_id", unique = true)
     private Client client;
 
     @ManyToOne
-    @JoinColumn(name = "tarif_id", referencedColumnName = "tariff_id")
     @NotNull
+    @JoinColumn(name = "tarif_id", referencedColumnName = "tariff_id")
     private Tariff tariff;
 
     @Positive
-    @Column(name = "amount")
     @NotNull
+    @Column(name = "amount")
     private Long amount; // Сумма кредита
 
     public enum Status {
         ACTIVE, CLOSED, EXPIRED
     }
     @Enumerated(EnumType.STRING)
-    @Column(name = "status")
     @NotNull
+    @Column(name = "status")
     private Status status;
 
     @PastOrPresent

@@ -2,9 +2,7 @@ package ru.nsu.bankbackend.model;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.persistence.*;
-import jakarta.validation.constraints.Email;
-import jakarta.validation.constraints.Past;
-import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.*;
 import lombok.Data;
 
 import java.util.Date;
@@ -17,20 +15,29 @@ public class Client {
     @Column(name = "client_id")
     private Long id;
 
-    @Column(name = "name", nullable = false)
+    @NotBlank
+    @Column(name = "name")
     private String name;
+
+    @NotBlank
     @Email
-    @Column(name = "email")
+    @Column(name = "email", unique = true)
     private String email;
+
     @Pattern(regexp = "\\+\\d{1,3}\\d{1,12}")
-    @Column(name = "phone")
+    @NotBlank
+    @Column(name = "phone", unique = true)
     private String phone;
+
     @Pattern(regexp = "\\d{4}-\\d{6}")
-    @Column(name = "passport_data", nullable = false)
+    @NotBlank
+    @Column(name = "passport_data", unique = true)
     private String passportData;
+
     @Past
     @JsonFormat(pattern="yyyy-MM-dd")
-    @Column(name = "birth_date", nullable = false)
+    @NotNull
+    @Column(name = "birth_date")
     private Date birthDate;
 
     public Client() {}
