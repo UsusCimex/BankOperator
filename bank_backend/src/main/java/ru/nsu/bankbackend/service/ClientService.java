@@ -89,7 +89,7 @@ public class ClientService {
 
         System.out.println("Executing Query: " + query);
 
-        String modifiedQuery = "SELECT c.client_id, c.name, c.email, c.phone, c.passport_data, c.birth_date FROM client c WHERE " + query.substring(query.indexOf("FROM client") + "FROM client".length());
+        String modifiedQuery = "SELECT c.client_id, c.name, c.email, c.phone, c.passport_data, c.birth_date FROM client c " + query.substring(query.indexOf("FROM client") + "FROM client".length());
 
         Query nativeQuery = entityManager.createNativeQuery(modifiedQuery);
         List<Object[]> queryResult = nativeQuery.getResultList();

@@ -96,7 +96,7 @@ public class PaymentService {
 
         System.out.println("Executing Query: " + query);
 
-        String sql = "SELECT p.payment_id, p.amount, p.commission, p.payment_date, p.payment_type, p.credit_id FROM payments p" + query.substring(query.indexOf("FROM payment") + "FROM payment".length());
+        String sql = "SELECT p.payment_id, p.amount, p.commission, p.payment_date, p.payment_type, p.credit_id FROM payment p " + query.substring(query.indexOf("FROM payment") + "FROM payment".length());
 
         Query nativeQuery = entityManager.createNativeQuery(sql);
         List<Object[]> queryResult = nativeQuery.getResultList();

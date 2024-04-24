@@ -3,7 +3,7 @@ package ru.nsu.bankbackend.controller;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.annotation.Secured;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import ru.nsu.bankbackend.model.Client;
 import ru.nsu.bankbackend.service.ClientService;
@@ -18,13 +18,13 @@ public class ClientController {
     private ClientService clientService;
 
     @GetMapping
-    @Secured({"ADMIN", "OPERATOR", "ACCOUNTANT", "TARIFF_MANAGER"})
+    @PreAuthorize("hasAnyRole('ADMIN', 'TARIFF_MANAGER', 'OPERATOR','ACCOUNTANT')")
     public List<Client> getAllClients() {
         return clientService.findAll();
     }
 
     @GetMapping("/{id}")
-    @Secured({"ADMIN", "OPERATOR"})
+    @PreAuthorize("hasAnyRole('ADMIN', 'OPERATOR')")
     public ResponseEntity<Client> getClientById(@PathVariable Long id) {
         return clientService.findById(id)
                 .map(ResponseEntity::ok)
@@ -32,13 +32,13 @@ public class ClientController {
     }
 
     @PostMapping
-    @Secured({"ADMIN", "OPERATOR"})
+    @PreAuthorize("hasAnyRole('ADMIN', 'OPERATOR')")
     public Client createClient(@RequestBody Client client) {
         return clientService.save(client);
     }
 
     @PutMapping("/{id}")
-    @Secured({"ADMIN", "OPERATOR"})
+    @PreAuthorize("hasAnyRole('ADMIN', 'OPERATOR')")
     public ResponseEntity<?> updateClient(@PathVariable Long id, @RequestBody Client clientDetails) {
         try {
             Client client = clientService.update(id, clientDetails);
@@ -52,7 +52,7 @@ public class ClientController {
     }
 
     @DeleteMapping("/{id}")
-    @Secured({"ADMIN", "OPERATOR"})
+    @PreAuthorize("hasAnyRole('ADMIN', 'OPERATOR')")
     public ResponseEntity<?> deleteClient(@PathVariable Long id) {
         try {
             clientService.deleteById(id);
@@ -65,7 +65,7 @@ public class ClientController {
     }
 
     @PostMapping("/customQuery")
-    @Secured({"ADMIN", "OPERATOR", "TARIFF_MANAGER"})
+    @PreAuthorize("hasAnyRole('ADMIN', 'TARIFF_MANAGER', 'OPERATOR','ACCOUNTANT')")
     public ResponseEntity<?> executeCustomQuery(@RequestBody String queryJson) {
         System.err.println("EXECUTE CUSTOM QUERY: " + queryJson);
         try {

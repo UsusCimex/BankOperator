@@ -81,7 +81,7 @@ public class TariffService {
 
         System.out.println("Executing Query: " + query);
 
-        String sql = "SELECT t.tariff_id, t.interest_rate, t.loan_term, t.max_amount, t.name FROM tariff t" + query.substring(query.indexOf("FROM tariff") + "FROM tariff".length());
+        String sql = "SELECT t.tariff_id, t.interest_rate, t.loan_term, t.max_amount, t.name FROM tariff t " + query.substring(query.indexOf("FROM tariff") + "FROM tariff".length());
 
         Query nativeQuery = entityManager.createNativeQuery(sql);
         List<Object[]> queryResult = nativeQuery.getResultList();

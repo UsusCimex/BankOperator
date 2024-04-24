@@ -3,7 +3,7 @@ package ru.nsu.bankbackend.controller;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.annotation.Secured;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -20,7 +20,7 @@ public class CustomQueryController {
     private CustomQueryService customQueryService;
 
     @PostMapping("/query")
-    @Secured("ADMIN")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<?> executeCustomQuery(@RequestBody String queryJson) {
         try {
             int count = customQueryService.execute(queryJson);

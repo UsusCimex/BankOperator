@@ -119,7 +119,7 @@ public class CreditService {
 
         System.out.println("Executing Query: " + query);
 
-        String sql = "SELECT c.credit_id, c.amount, c.end_date, c.start_date, c.status, c.client_id, c.tarif_id FROM credits c WHERE " + query.substring(query.indexOf("FROM credit") + "FROM credit".length());
+        String sql = "SELECT c.credit_id, c.amount, c.end_date, c.start_date, c.status, c.client_id, c.tarif_id FROM credit c " + query.substring(query.indexOf("FROM credit") + "FROM credit".length());
 
         Query nativeQuery = entityManager.createNativeQuery(sql);
         List<Object[]> queryResult = nativeQuery.getResultList();

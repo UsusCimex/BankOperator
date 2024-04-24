@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import api from './AxiosApi';
+import './Authorization.css'
 
 const RegistrationForm = ({ onSignUp }) => {
   const [email, setEmail] = useState('');
@@ -21,7 +22,7 @@ const RegistrationForm = ({ onSignUp }) => {
   };
 
   return (
-    <form onSubmit={handleSubmit}>
+    <form className="auth-form" onSubmit={handleSubmit}>
       {error && <p style={{ color: 'red' }}>{error}</p>}
       <div>
         <label>Email:</label>
@@ -34,9 +35,9 @@ const RegistrationForm = ({ onSignUp }) => {
       <div>
         <label>Role:</label>
         <select value={role} onChange={(e) => setRole(e.target.value)}>
-          <option value="OPERATOR">Operator</option>
-          <option value="TARIFF_MANAGER">Tariff Manager</option>
-          <option value="ACCOUNTANT">Accountant</option>
+          <option value="ROLE_OPERATOR">Operator</option>
+          <option value="ROLE_TARIFF_MANAGER">Tariff Manager</option>
+          <option value="ROLE_ACCOUNTANT">Accountant</option>
         </select>
       </div>
       <button type="submit">Register</button>
