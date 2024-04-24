@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import api from './AxiosApi';
+import './Authorization.css'
 
 const LoginForm = ({ onLogin }) => {
   const [email, setEmail] = useState('');
@@ -19,7 +20,7 @@ const LoginForm = ({ onLogin }) => {
   };
 
   return (
-    <form onSubmit={handleSubmit}>
+    <form className="auth-form" onSubmit={handleSubmit}>
       {error && <p style={{ color: 'red' }}>{error}</p>} 
       <div>
         <label>Email:</label>

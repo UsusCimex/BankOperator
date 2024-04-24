@@ -1,0 +1,59 @@
+.auth-form {
+    font-family: Arial, sans-serif;
+    background: #f9f9f9;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    width: 300px;
+    margin: 20px auto;
+    box-sizing: border-box; /* Для учета padding в общей ширине */
+}
+
+.auth-form p {
+    color: red;
+    margin: 10px 0; /* Добавляем отступ сверху и снизу */
+}
+
+.auth-form label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: bold;
+}
+
+.auth-form input[type="text"],
+.auth-form input[type="password"],
+.auth-form input[type="email"],
+.auth-form select {
+    width: calc(100% - 16px); /* Уменьшаем ширину на размер padding */
+    padding: 8px;
+    margin-bottom: 20px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    box-sizing: border-box; /* Для учета padding и border в общей ширине */
+}
+
+.auth-form button,
+.auth-form .toggle-button { /* Применяем стили и к toggle-button */
+    width: 100%;
+    padding: 10px;
+    background-color: #767676;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+    text-align: center; /* Выравнивание текста по центру */
+    display: block; /* Делаем кнопку блочным элементом */
+    margin-bottom: 10px; /* Отступ для разделения элементов */
+    text-decoration: none; /* Убираем подчеркивание текста */
+}
+
+.auth-form button:hover,
+.auth-form .toggle-button:hover { /* Стили для наведения */
+    background-color: #5a5a5a;
+}
+
+.auth-form h1 {
+    color: #767676;
+    text-align: center; /* Выравниваем заголовок по центру */
+}

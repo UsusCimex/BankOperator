@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import LoginForm from '../authorization/LoginForm';
 import RegistrationForm from '../authorization/RegistrationForm';
+import '../authorization/Authorization.css'
 
 const Home = ({ isAuthenticated, onLogin }) => {
   const [showRegistration, setShowRegistration] = useState(false);
@@ -15,12 +16,12 @@ const Home = ({ isAuthenticated, onLogin }) => {
       ) : localStorage.removeItem('token') || showRegistration ? (
         <>
           <RegistrationForm onSignUp={onLogin} />
-          <button onClick={() => setShowRegistration(false)}>Have account? Login here!</button>
+          <button className='auth-form toggle-button' onClick={() => setShowRegistration(false)}>Have account? Login here!</button>
         </>
       ) : (
         <>
           <LoginForm onLogin={onLogin} />
-          <button onClick={() => setShowRegistration(true)}>No account? Register here!</button>
+          <button className='auth-form toggle-button' onClick={() => setShowRegistration(true)}>No account? Register here!</button>
         </>
       )}
     </div>
