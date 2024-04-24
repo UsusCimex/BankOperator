@@ -25,7 +25,7 @@ public class TariffController {
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'OPERATOR')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'TARIFF_MANAGER')")
     public ResponseEntity<Tariff> getTariffById(@PathVariable Long id) {
         return tariffService.findById(id)
                 .map(ResponseEntity::ok)
@@ -33,13 +33,13 @@ public class TariffController {
     }
 
     @PostMapping
-    @PreAuthorize("hasAnyRole('ADMIN', 'OPERATOR')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'TARIFF_MANAGER')")
     public Tariff createTariff(@RequestBody Tariff tariff) {
         return tariffService.save(tariff);
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'OPERATOR')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'TARIFF_MANAGER')")
     public ResponseEntity<Tariff> updateTariff(@PathVariable Long id, @RequestBody Tariff tariffDetails) {
         return tariffService.update(id, tariffDetails)
                 .map(ResponseEntity::ok)
@@ -47,7 +47,7 @@ public class TariffController {
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'OPERATOR')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'TARIFF_MANAGER')")
     public ResponseEntity<?> deleteTariff(@PathVariable Long id) {
         tariffService.deleteById(id);
         return ResponseEntity.ok().build();

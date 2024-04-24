@@ -38,10 +38,12 @@ public class AuthService {
             var refreshToken = jwtUtils.generateRefreshToken(new HashMap<>(), user);
             response.setToken(jwt);
             response.setRefreshToken(refreshToken);
+            response.setRole(ourUserResult.getRole());
         }
         return response;
     }
 
+    @Transactional
     public AuthenticationResponse signIn(AuthenticationRequest authorizationRequest) {
         authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(authorizationRequest.getEmail(),authorizationRequest.getPassword()));
 
@@ -51,9 +53,11 @@ public class AuthService {
         var refreshToken = jwtUtils.generateRefreshToken(new HashMap<>(), user);
         response.setToken(jwt);
         response.setRefreshToken(refreshToken);
+        response.setRole(user.getRole());
         return response;
     }
 
+    @Transactional
     public AuthenticationResponse refreshToken(AuthenticationRequest refreshTokenRequest){
         AuthenticationResponse response = new AuthenticationResponse();
         String ourEmail = jwtUtils.extractUsername(refreshTokenRequest.getRefreshToken());
@@ -62,7 +66,19 @@ public class AuthService {
             var jwt = jwtUtils.generateToken(users);
             response.setToken(jwt);
             response.setRefreshToken(refreshTokenRequest.getRefreshToken());
+            response.setRole(users.getRole());
         }
         return response;
+    }
+
+    @Transactional
+    public boolean validateToken(String token) {
+        try {
+            String userEmail = jwtUtils.extractUsername(token);
+            User user = userRepository.findByEmail(userEmail).orElseThrow(() -> new RuntimeException("User not found"));
+            return jwtUtils.isTokenValid(token, user);
+        } catch (Exception e) {
+            return false;
+        }
     }
 }
