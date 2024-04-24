@@ -26,7 +26,6 @@ public class CustomQueryService {
         }
 
         String queryText = queryNode.asText();
-        System.out.println("Received query: " + queryText);
         // Возможная валидация запроса
 
         Query query = entityManager.createNativeQuery(queryText);

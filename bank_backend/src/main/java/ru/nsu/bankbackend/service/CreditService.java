@@ -105,7 +105,6 @@ public class CreditService {
 
         String query = queryNode.asText();
         String testQuery = query.toLowerCase();
-        System.out.println("Received query: " + query);
 
         // Базовая проверка FROM client
         if (!testQuery.contains("select * from credit")) {
@@ -116,8 +115,6 @@ public class CreditService {
         if (testQuery.contains("join") || testQuery.contains("group by") || testQuery.contains(";") || testQuery.contains(",")) {
             throw new IllegalArgumentException("JOIN, GROUP BY и использование ';' и ',' не разрешены.");
         }
-
-        System.out.println("Executing Query: " + query);
 
         String sql = "SELECT c.credit_id, c.amount, c.end_date, c.start_date, c.status, c.client_id, c.tarif_id FROM credit c " + query.substring(query.indexOf("FROM credit") + "FROM credit".length());
 

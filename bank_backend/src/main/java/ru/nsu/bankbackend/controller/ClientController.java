@@ -67,7 +67,6 @@ public class ClientController {
     @PostMapping("/customQuery")
     @PreAuthorize("hasAnyRole('ADMIN', 'TARIFF_MANAGER', 'OPERATOR','ACCOUNTANT')")
     public ResponseEntity<?> executeCustomQuery(@RequestBody String queryJson) {
-        System.err.println("EXECUTE CUSTOM QUERY: " + queryJson);
         try {
             List<Client> response = clientService.executeCustomQuery(queryJson);
             return ResponseEntity.ok(response);

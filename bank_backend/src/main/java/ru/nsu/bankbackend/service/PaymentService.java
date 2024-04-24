@@ -82,7 +82,6 @@ public class PaymentService {
 
         String query = queryNode.asText();
         String testQuery = query.toLowerCase();
-        System.out.println("Received query: " + query);
 
         // Базовая проверка FROM client
         if (!testQuery.contains("select * from payment")) {
@@ -93,8 +92,6 @@ public class PaymentService {
         if (testQuery.contains("join") || testQuery.contains("group by") || testQuery.contains(";") || testQuery.contains(",")) {
             throw new IllegalArgumentException("JOIN, GROUP BY и использование ';' и ',' не разрешены.");
         }
-
-        System.out.println("Executing Query: " + query);
 
         String sql = "SELECT p.payment_id, p.amount, p.commission, p.payment_date, p.payment_type, p.credit_id FROM payment p " + query.substring(query.indexOf("FROM payment") + "FROM payment".length());
 

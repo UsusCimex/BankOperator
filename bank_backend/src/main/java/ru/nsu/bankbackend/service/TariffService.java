@@ -67,7 +67,6 @@ public class TariffService {
 
         String query = queryNode.asText();
         String testQuery = query.toLowerCase();
-        System.out.println("Received query: " + query);
 
         // Базовая проверка FROM client
         if (!testQuery.contains("select * from tariff")) {
@@ -78,8 +77,6 @@ public class TariffService {
         if (testQuery.contains("join") || testQuery.contains("group by") || testQuery.contains(";") || testQuery.contains(",")) {
             throw new IllegalArgumentException("JOIN, GROUP BY и использование ';' и ',' не разрешены.");
         }
-
-        System.out.println("Executing Query: " + query);
 
         String sql = "SELECT t.tariff_id, t.interest_rate, t.loan_term, t.max_amount, t.name FROM tariff t " + query.substring(query.indexOf("FROM tariff") + "FROM tariff".length());
 
