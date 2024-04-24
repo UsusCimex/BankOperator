@@ -12,7 +12,7 @@ const LoginForm = ({ onLogin }) => {
     setError('');
     try {
       const response = await api.post('/signin', { email, password });
-      onLogin(response.data.token);
+      onLogin(response.data.token, response.data.role);
     } catch (error) {
       console.error('Ошибка аутентификации', error);
       setError('Authentication failed. Please check your username and password.');

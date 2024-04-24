@@ -12,6 +12,7 @@ function Tariffs() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const role = localStorage.getItem('role')
 
   useEffect(() => {
     const savedQuery = sessionStorage.getItem('userTariffQuery');
@@ -43,7 +44,8 @@ function Tariffs() {
   };
 
   const handleTariffClick = (tariffId) => {
-    navigate(`/tariffs/${tariffId}`);
+    if (role === "ROLE_TARIFF_MANAGER" || role === "ROLE_ADMIN")
+      navigate(`/tariffs/${tariffId}`);
   };
 
   const handleTariffAdded = () => {
@@ -72,7 +74,7 @@ function Tariffs() {
         <small>You can use attributes like tariff_id, name, loan term, interest rate, max amount in your WHERE clause.</small>
         <button type="submit" className="form-button">Execute Query</button>
       </form>
-      <button onClick={() => setModalOpen(true)} className="button button-primary">Add Tariff</button>
+      {(role === "ROLE_TARIFF_MANAGER" || role === "ROLE_ADMIN") && <button onClick={() => setModalOpen(true)} className="button button-primary">Add Tariff</button>}
       {modalOpen && <AddTariffModal onClose={() => setModalOpen(false)} onTariffAdded={handleTariffAdded} />}
       {loading && <div>Loading...</div>}
       {error && <div className="alert-danger">Error: {error}</div>}

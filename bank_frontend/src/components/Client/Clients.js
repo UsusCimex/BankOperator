@@ -12,6 +12,7 @@ function Clients() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const role = localStorage.getItem('role');
 
   useEffect(() => {
     const savedQuery = sessionStorage.getItem('userClientQuery');
@@ -48,7 +49,8 @@ function Clients() {
   };
 
   const handleClientClick = clientId => {
-    navigate(`/clients/${clientId}`);
+    if (role === "ROLE_OPERATOR" || role === "ROLE_ADMIN")
+      navigate(`/clients/${clientId}`);
   };
 
   const handleClientAdded = () => {
@@ -66,7 +68,7 @@ function Clients() {
         <small>You can use attributes like client_id, name, email, phone, passport_data, birth_date in your WHERE clause.</small>
         <button type="submit" className="form-button">Execute Query</button>
       </form>
-      <button onClick={() => setModalOpen(true)} className="button button-primary">Add Client</button>
+      {(role === "ROLE_OPERATOR" || role === "ROLE_ADMIN") && <button onClick={() => setModalOpen(true)} className="button button-primary">Add Client</button>}
       {modalOpen && <AddClientModal onClose={() => setModalOpen(false)} onClientAdded={handleClientAdded} />}
       {loading && <div>Loading...</div>}
       {error && <div className="alert-danger">Error: {error}</div>}

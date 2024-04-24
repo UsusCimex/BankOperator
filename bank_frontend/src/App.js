@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { BrowserRouter as Router, Route, Routes, NavLink } from 'react-router-dom';
 import Clients from './components/Client/Clients';
 import Credits from './components/Credit/Credits';
@@ -12,6 +12,7 @@ import TariffPage from './components/Tariff/TariffPage';
 import PaymentPage from './components/Payment/PaymentPage';
 import { executeCustomQuery } from './services/CustomQueryService';
 import PrivateRoute from './authorization/PrivateRoute';
+import api from './authorization/AxiosApi';
 
 import Button from '@mui/material/Button';
 import CreateIcon from '@mui/icons-material/Create';
@@ -52,16 +53,42 @@ function QueryModal({ isOpen, onClose }) {
 function App() {
   const [isQueryModalOpen, setQueryModalOpen] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const role = localStorage.getItem('role');
 
-  const handleLogin = (token) => {
+  useEffect(() => {
+    const checkAuth = async () => {
+      try {
+        const response = await api.get('/validate-token');
+        setIsAuthenticated(response.data.isValid);
+      } catch (error) {
+        console.error('Token validation failed', error);
+        setIsAuthenticated(false);
+        localStorage.removeItem('token');
+        localStorage.removeItem('role');
+      }
+    };
+    !isAuthenticated && localStorage.getItem('token') && checkAuth();
+  }, [isAuthenticated]);
+
+  const handleLogin = (token, role) => {
     localStorage.setItem('token', token);
+    localStorage.setItem('role', role);
     setIsAuthenticated(true);
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('role');
+    setIsAuthenticated(false);
   };
 
   return (
     <Router>
       <div className="app-container">
         <nav className="navbar">
+          {isAuthenticated && 
+            <Button className="query-modal-btn-container Button" onClick={handleLogout}>Logout</Button>
+          }
           <div className="nav-links-container">
             <div className="nav-links">
               <NavLink className="nav-link" to="/" end>Home</NavLink>
@@ -71,7 +98,7 @@ function App() {
               <NavLink className="nav-link" to="/tariffs">Tariffs</NavLink>
             </div>
           </div>
-          {isAuthenticated && 
+          {role === 'ROLE_ADMIN' && 
           <div className="query-modal-btn-container">
             <Button
               variant="contained"

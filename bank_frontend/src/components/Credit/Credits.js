@@ -12,6 +12,7 @@ function Credits() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const role = localStorage.getItem('role')
 
   useEffect(() => {
     const savedQuery = sessionStorage.getItem('userCreditQuery');
@@ -43,7 +44,8 @@ function Credits() {
   };
 
   const handleCreditClick = (creditId) => {
-    navigate(`/credits/${creditId}`);
+    if (role === "ROLE_OPERATOR" || role === "ROLE_ADMIN")
+      navigate(`/credits/${creditId}`);
   };
 
   const handleCreditAdded = () => {
@@ -72,7 +74,7 @@ function Credits() {
         <small>You can use attributes like credit_id, client_id, tariff_id, amount, status, start_date, end_date in your WHERE clause.</small>
         <button type="submit" className="form-button">Execute Query</button>
       </form>
-      <button onClick={() => setModalOpen(true)} className="button button-primary">Add Credit</button>
+      {(role === "ROLE_OPERATOR" || role === "ROLE_ADMIN") && <button onClick={() => setModalOpen(true)} className="button button-primary">Add Credit</button> }
       {modalOpen && <AddCreditModal onClose={() => setModalOpen(false)} onCreditAdded={handleCreditAdded} />}
       {loading && <div>Loading...</div>}
       {error && <div className="alert-danger">Error: {error}</div>}

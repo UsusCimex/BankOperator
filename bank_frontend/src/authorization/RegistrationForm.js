@@ -13,7 +13,7 @@ const RegistrationForm = ({ onSignUp }) => {
     setError('');
     try {
       const response = await api.post('/signup', { email, password, role });
-      onSignUp(response.data.token);
+      onSignUp(response.data.token, response.data.role);
       console.log('Registration successful');
     } catch (error) {
       console.error('Ошибка регистрации', error);
