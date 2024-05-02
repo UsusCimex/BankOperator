@@ -53,32 +53,33 @@ function QueryModal({ isOpen, onClose }) {
 function App() {
   const [isQueryModalOpen, setQueryModalOpen] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const role = localStorage.getItem('role');
+  const role = sessionStorage.getItem('role');
 
   useEffect(() => {
     const checkAuth = async () => {
       try {
         const response = await api.get('/validate-token');
-        setIsAuthenticated(response.data.isValid);
+        console.log(response.data);
+        setIsAuthenticated(true);
       } catch (error) {
         console.error('Token validation failed', error);
         setIsAuthenticated(false);
-        localStorage.removeItem('token');
-        localStorage.removeItem('role');
+        sessionStorage.removeItem('token');
+        sessionStorage.removeItem('role');
       }
     };
-    !isAuthenticated && localStorage.getItem('token') && checkAuth();
+    !isAuthenticated && sessionStorage.getItem('token') && checkAuth();
   }, [isAuthenticated]);
 
   const handleLogin = (token, role) => {
-    localStorage.setItem('token', token);
-    localStorage.setItem('role', role);
+    sessionStorage.setItem('token', token);
+    sessionStorage.setItem('role', role);
     setIsAuthenticated(true);
   };
 
   const handleLogout = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('role');
+    sessionStorage.removeItem('token');
+    sessionStorage.removeItem('role');
     setIsAuthenticated(false);
   };
 
