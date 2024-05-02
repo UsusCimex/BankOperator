@@ -54,7 +54,7 @@ public class TariffController {
     }
 
     @PostMapping("/customQuery")
-    @PreAuthorize("hasAnyRole('ADMIN', 'TARIFF_MANAGER', 'OPERATOR','ACCOUNTANT')")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<?> executeCustomQuery(@RequestBody String queryJson) {
         try {
             List<Tariff> response = tariffService.executeCustomQuery(queryJson);

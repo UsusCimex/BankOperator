@@ -1,6 +1,7 @@
 package ru.nsu.bankbackend.controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -9,6 +10,7 @@ import ru.nsu.bankbackend.model.Client;
 import ru.nsu.bankbackend.service.ClientService;
 
 import java.util.Collections;
+import java.util.Date;
 import java.util.List;
 
 @RestController
@@ -19,8 +21,17 @@ public class ClientController {
 
     @GetMapping
     @PreAuthorize("hasAnyRole('ADMIN', 'TARIFF_MANAGER', 'OPERATOR','ACCOUNTANT')")
-    public List<Client> getAllClients() {
-        return clientService.findAll();
+    public List<Client> getClientsWithFilters(
+            @RequestParam(required = false) String name,
+            @RequestParam(required = false) String email,
+            @RequestParam(required = false) String phone,
+            @RequestParam(required = false) String passport,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) Date birthDate,
+            @RequestParam(required = false) String creditStatus,
+            @RequestParam(required = false) Boolean hasCredit,
+            @RequestParam(required = false) Boolean isBlocked
+    ) {
+        return clientService.findWithFilters(name, email, phone, passport, birthDate, creditStatus, hasCredit, isBlocked);
     }
 
     @GetMapping("/{id}")
@@ -65,7 +76,7 @@ public class ClientController {
     }
 
     @PostMapping("/customQuery")
-    @PreAuthorize("hasAnyRole('ADMIN', 'TARIFF_MANAGER', 'OPERATOR','ACCOUNTANT')")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<?> executeCustomQuery(@RequestBody String queryJson) {
         try {
             List<Client> response = clientService.executeCustomQuery(queryJson);

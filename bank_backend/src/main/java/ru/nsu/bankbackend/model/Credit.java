@@ -1,6 +1,7 @@
 package ru.nsu.bankbackend.model;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.PastOrPresent;
@@ -17,9 +18,10 @@ public class Credit {
     @Column(name = "credit_id")
     private Long id;
 
-    @ManyToOne
+    @OneToOne
+    @JsonManagedReference("client-credit")
     @NotNull
-    @JoinColumn(name = "client_id", referencedColumnName = "client_id", unique = true)
+    @JoinColumn(name = "client_id", referencedColumnName = "client_id")
     private Client client;
 
     @ManyToOne

@@ -1,5 +1,6 @@
 package ru.nsu.bankbackend.model;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
@@ -39,6 +40,14 @@ public class Client {
     @NotNull
     @Column(name = "birth_date")
     private Date birthDate;
+
+    @OneToOne(mappedBy = "client")
+    @JsonBackReference("client-blockage")
+    private Blockage blockage;
+
+    @OneToOne(mappedBy = "client")
+    @JsonBackReference("client-credit")
+    private Credit credit;
 
     public Client() {}
 

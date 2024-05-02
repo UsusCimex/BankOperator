@@ -1,5 +1,6 @@
 package ru.nsu.bankbackend.model;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
@@ -16,6 +17,7 @@ public class Blockage {
 
     @OneToOne
     @NotNull
+    @JsonManagedReference("client-blockage")
     @JoinColumn(name = "client_id")
     private Client client;
 

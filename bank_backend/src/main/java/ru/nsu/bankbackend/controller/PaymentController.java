@@ -5,6 +5,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import ru.nsu.bankbackend.dto.PaymentDTO;
 import ru.nsu.bankbackend.model.Payment;
 import ru.nsu.bankbackend.service.PaymentService;
 
@@ -33,13 +34,13 @@ public class PaymentController {
 
     @PostMapping
     @PreAuthorize("hasAnyRole('ADMIN', 'OPERATOR')")
-    public Payment createPayment(@RequestBody Payment payment) {
+    public Payment createPayment(@RequestBody PaymentDTO payment) {
         return paymentService.save(payment);
     }
 
     @PutMapping("/{id}")
     @PreAuthorize("hasAnyRole('ADMIN', 'OPERATOR')")
-    public ResponseEntity<?> updatePayment(@PathVariable Long id, @RequestBody Payment paymentDetails) {
+    public ResponseEntity<?> updatePayment(@PathVariable Long id, @RequestBody PaymentDTO paymentDetails) {
         try {
             Payment payment = paymentService.update(id, paymentDetails);
             return ResponseEntity.ok(payment);
@@ -59,7 +60,7 @@ public class PaymentController {
     }
 
     @PostMapping("/customQuery")
-    @PreAuthorize("hasAnyRole('ADMIN', 'TARIFF_MANAGER', 'OPERATOR','ACCOUNTANT')")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<?> executeCustomQuery(@RequestBody String queryJson) {
         try {
             List<Payment> response = paymentService.executeCustomQuery(queryJson);

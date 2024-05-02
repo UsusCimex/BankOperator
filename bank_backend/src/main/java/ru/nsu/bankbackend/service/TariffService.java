@@ -9,12 +9,9 @@ import jakarta.persistence.Query;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import ru.nsu.bankbackend.model.Client;
-import ru.nsu.bankbackend.model.Credit;
 import ru.nsu.bankbackend.model.Tariff;
 import ru.nsu.bankbackend.repository.TariffRepository;
 
-import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;

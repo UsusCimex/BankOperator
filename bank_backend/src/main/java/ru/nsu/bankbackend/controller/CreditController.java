@@ -5,6 +5,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import ru.nsu.bankbackend.dto.CreditDTO;
 import ru.nsu.bankbackend.model.Credit;
 import ru.nsu.bankbackend.service.CreditService;
 
@@ -35,13 +36,13 @@ public class CreditController {
 
     @PostMapping
     @PreAuthorize("hasAnyRole('ADMIN', 'OPERATOR')")
-    public Credit createCredit(@RequestBody Credit credit) {
+    public Credit createCredit(@RequestBody CreditDTO credit) {
         return creditService.save(credit);
     }
 
     @PutMapping("/{id}")
     @PreAuthorize("hasAnyRole('ADMIN', 'OPERATOR')")
-    public ResponseEntity<Credit> updateCredit(@PathVariable Long id, @RequestBody Credit creditDetails) {
+    public ResponseEntity<Credit> updateCredit(@PathVariable Long id, @RequestBody CreditDTO creditDetails) {
         return creditService.update(id, creditDetails)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
@@ -55,7 +56,7 @@ public class CreditController {
     }
 
     @PostMapping("/customQuery")
-    @PreAuthorize("hasAnyRole('ADMIN', 'TARIFF_MANAGER', 'OPERATOR','ACCOUNTANT')")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<?> executeCustomQuery(@RequestBody String queryJson) {
         try {
             List<Credit> response = creditService.executeCustomQuery(queryJson);

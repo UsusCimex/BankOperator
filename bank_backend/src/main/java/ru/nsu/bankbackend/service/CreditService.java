@@ -9,6 +9,7 @@ import jakarta.persistence.Query;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import ru.nsu.bankbackend.dto.CreditDTO;
 import ru.nsu.bankbackend.model.Client;
 import ru.nsu.bankbackend.model.Credit;
 import ru.nsu.bankbackend.model.Tariff;
@@ -44,10 +45,10 @@ public class CreditService {
     }
 
     @Transactional
-    public Credit save(Credit creditDetail) {
-        Client client = clientRepository.findById(creditDetail.getClient().getId())
+    public Credit save(CreditDTO creditDetail) {
+        Client client = clientRepository.findById(creditDetail.getClientId())
                 .orElseThrow(() -> new RuntimeException("Client not found"));
-        Tariff tariff = tariffRepository.findById(creditDetail.getTariff().getId())
+        Tariff tariff = tariffRepository.findById(creditDetail.getTariffId())
                 .orElseThrow(() -> new RuntimeException("Tariff not found"));
 
         if (creditDetail.getAmount() > tariff.getMaxAmount()) {
@@ -65,14 +66,20 @@ public class CreditService {
     }
 
     @Transactional
-    public Optional<Credit> update(Long id, Credit creditDetails) {
+    public Optional<Credit> update(Long id, CreditDTO creditDetails) {
         return creditRepository.findById(id)
                 .map(existingCredit -> {
-                    Tariff tariff = tariffRepository.findById(creditDetails.getTariff().getId())
+                    Client client = clientRepository.findById(creditDetails.getClientId())
+                            .orElseThrow(() -> new RuntimeException("Client not found"));
+                    Tariff tariff = tariffRepository.findById(creditDetails.getTariffId())
                             .orElseThrow(() -> new RuntimeException("Tariff not found"));
 
-                    existingCredit.setClient(creditDetails.getClient());
-                    existingCredit.setTariff(creditDetails.getTariff());
+                    if (creditDetails.getAmount() > tariff.getMaxAmount()) {
+                        throw new IllegalArgumentException("Requested amount exceeds the maximum allowed by the tariff");
+                    }
+
+                    existingCredit.setClient(client);
+                    existingCredit.setTariff(tariff);
                     existingCredit.setAmount(creditDetails.getAmount());
                     existingCredit.setStatus(Credit.convertStringToStatus(creditDetails.getStatus().name()));  // Преобразование статуса
                     existingCredit.setStartDate(creditDetails.getStartDate());
@@ -91,6 +98,30 @@ public class CreditService {
 
     public void deleteById(Long id) {
         creditRepository.deleteById(id);
+    }
+
+    public CreditDTO mapToCreditDTO(Credit credit) {
+        CreditDTO creditDTO = new CreditDTO();
+        creditDTO.setId(credit.getId());
+        creditDTO.setAmount(credit.getAmount());
+        creditDTO.setClientId(credit.getClient().getId());
+        creditDTO.setTariffId(credit.getTariff().getId());
+        creditDTO.setStartDate(credit.getStartDate());
+        creditDTO.setStatus(credit.getStatus());
+        creditDTO.setEndDate(credit.getEndDate());
+        return creditDTO;
+    }
+
+    public Credit mapToCredit(CreditDTO creditDTO) {
+        Credit credit = new Credit();
+        credit.setId(creditDTO.getId());
+        credit.setAmount(creditDTO.getAmount());
+        credit.setStartDate(creditDTO.getStartDate());
+        credit.setEndDate(creditDTO.getEndDate());
+        credit.setStatus(credit.getStatus());
+        credit.setClient(clientRepository.findById(creditDTO.getClientId()).orElseThrow(() -> new RuntimeException("Client not found")));
+        credit.setTariff(tariffRepository.findById(creditDTO.getTariffId()).orElseThrow(() -> new RuntimeException("Tariff not found")));
+        return credit;
     }
 
     @Transactional

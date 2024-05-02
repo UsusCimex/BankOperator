@@ -7,14 +7,15 @@ import jakarta.persistence.PersistenceContext;
 import jakarta.persistence.Query;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
+import ru.nsu.bankbackend.cpecification.ClientSpecification;
 import ru.nsu.bankbackend.model.Client;
+import ru.nsu.bankbackend.model.Credit;
 import ru.nsu.bankbackend.repository.ClientRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
@@ -22,14 +23,41 @@ import java.util.stream.Collectors;
 
 @Service
 public class ClientService {
-
     @Autowired
     private ClientRepository clientRepository;
     @PersistenceContext
     private EntityManager entityManager;
 
-    public List<Client> findAll() {
-        return clientRepository.findAll();
+    @Transactional
+    public List<Client> findWithFilters(String name, String email, String phone, String passport, Date birthDate, String creditStatus, Boolean hasCredit, Boolean hasBlock) {
+        Specification<Client> spec = Specification.where(null);
+
+        if (name != null) {
+            spec = spec.and(ClientSpecification.hasNameLike(name));
+        }
+        if (email != null) {
+            spec = spec.and(ClientSpecification.hasEmailLike(email));
+        }
+        if (phone != null) {
+            spec = spec.and(ClientSpecification.hasPhoneLike(phone));
+        }
+        if (passport != null) {
+            spec = spec.and(ClientSpecification.hasPassportLike(passport));
+        }
+        if (birthDate != null) {
+            spec = spec.and(ClientSpecification.hasBirthdate(birthDate));
+        }
+        if (creditStatus != null) {
+            spec = spec.and(ClientSpecification.hasCreditStatus(Credit.convertStringToStatus(creditStatus)));
+        }
+        if (hasCredit != null) {
+            spec = spec.and(ClientSpecification.hasCredit(hasCredit));
+        }
+        if (hasBlock != null) {
+            spec = spec.and(ClientSpecification.hasBlock(hasBlock));
+        }
+
+        return clientRepository.findAll(spec);
     }
 
     public Optional<Client> findById(Long id) {
