@@ -13,7 +13,7 @@ const Home = ({ isAuthenticated, onLogin }) => {
           <h1>Welcome to the Credit Management System</h1>
           <p>Select a section from the navigation menu.</p>
         </>
-      ) : localStorage.removeItem('token') || showRegistration ? (
+      ) : showRegistration ? (
         <>
           <RegistrationForm onSignUp={onLogin} />
           <button className='auth-form toggle-button' onClick={() => setShowRegistration(false)}>Have account? Login here!</button>
