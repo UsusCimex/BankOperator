@@ -3,68 +3,123 @@
   padding: 20px;
 }
 
-.form-standard,
-.filter-form {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 10px;
-  margin-top: 20px;
-  margin-bottom: 20px;
+.form-container {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr); /* Создаем 4 колонки */
+  gap: 10px; /* Расстояние между элементами */
+  padding: 10px;
+  border-radius: 8px;
 }
 
 .form-input-group {
   display: flex;
-  align-items: center;
-  width: 95%;
+  flex-direction: column;
 }
 
-.form-input {
-  width: 100%;
-  padding: 10px;
+.form-input, .form-button {
+  padding: 8px;
   border: 1px solid #ccc;
-  border-radius: 5px;
+  border-radius: 4px;
+  font-size: 14px;
 }
 
-.base-query-input {
-  flex: 1;
-  text-align: center;
-  background-color: #f3f3f3; 
-}
-
-.user-query-input {
-  flex: 5;
-}
-
-.form-input:focus {
-  outline: 2px solid #007bff;
-}
-
-.form-input:disabled {
-  cursor: not-allowed;
+.form-input:focus, .form-button:focus {
+  border-color: #0056b3;
+  outline: none;
 }
 
 .form-button {
-  padding: 10px 15px;
-  border: none;
-  border-radius: 5px;
-  background-color: #007bff;
+  background-color: #007bff; /* Синий цвет */
   color: white;
   cursor: pointer;
-  width: fit-content;
+  border: none;
+  padding: 10px 15px; /* Больше паддинг для кнопки */
 }
 
 .form-button:hover {
-  background-color: #0056b3;
+  background-color: #0056b3; /* Темнее при наведении */
+}
+
+select.form-input {
+  cursor: pointer;
+}
+
+label {
+  margin-bottom: 5px;
+  font-weight: bold;
+}
+
+/* Стили для формы запроса */
+.form-standard {
+  display: flex;
+  flex-direction: column;
+}
+
+.form-query-group {
+  display: flex;
+  margin-bottom: 10px;
+}
+
+.base-query-input {
+  flex: 1; /* Фиксированная часть */
+  background-color: #f3f3f3;
+  border: 1px solid #ccc;
+  padding: 8px;
+  font-size: 14px;
+  margin-right: 10px; /* Отступ между полями */
+}
+
+.user-query-input {
+  flex: 5; /* Вводимая часть */
+  border: 1px solid #ccc;
+  padding: 8px;
+  font-size: 14px;
+}
+
+.button-group {
+  display: flex;
+  flex-direction: column; /* Вертикальное расположение кнопок */
+  align-items: center; /* Центрирование кнопок */
+  margin-top: 20px;
+}
+
+.add-button {
+  background-color: #28a745; /* Зеленый цвет кнопки */
+  color: white;
+  cursor: pointer;
+  border: none;
+  padding: 10px 15px; /* Паддинг для кнопки */
+  border-radius: 4px;
+  margin-top: 10px; /* Отступ сверху для разделения кнопок */
+}
+
+.add-button:hover {
+  background-color: #218838; /* Темнее при наведении */
 }
 
 .button {
   padding: 10px 15px;
   border: none;
+  grid-column: span 2;
   border-radius: 5px;
   color: white;
   cursor: pointer;
-  margin-bottom: 20px;
+  margin-right: 10px; /* Отступ между кнопками */
+}
+
+.execute-query-button {
+  padding: 6px 10px;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-size: 12px;
+  margin: 10px auto; /* Добавляем автоматические отступы по бокам */
+  display: block; /* Блочный тип для возможности центрирования */
+}
+
+.execute-query-button:hover {
+  background-color: #0056b3; /* Темнее при наведении */
 }
 
 .button-primary {
@@ -101,7 +156,6 @@
   border-radius: 5px;
   margin: 20px 0;
 }
-
 
 /* Модальные окна */
 .modal-backdrop {
