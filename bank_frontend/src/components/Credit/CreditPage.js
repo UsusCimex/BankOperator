@@ -35,6 +35,7 @@ function CreditPage() {
 
   useEffect(() => {
     async function fetchData() {
+      setLoading(true);
       try {
         const [clients, tariffs] = await Promise.all([getAllClients(), getAllTariffs()]);
         setClientsOptions(clients.map(client => ({

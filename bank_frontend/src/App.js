@@ -56,31 +56,34 @@ function App() {
   const role = sessionStorage.getItem('role');
 
   useEffect(() => {
-    const checkAuth = async () => {
-      try {
-        const response = await api.get('/validate-token');
-        console.log(response.data);
-        setIsAuthenticated(true);
-      } catch (error) {
-        console.error('Token validation failed', error);
-        setIsAuthenticated(false);
-        sessionStorage.removeItem('token');
-        sessionStorage.removeItem('role');
-      }
-    };
-    !isAuthenticated && sessionStorage.getItem('token') && checkAuth();
+    const timer = setTimeout(() => {
+      const checkAuth = async () => {
+        try {
+          const response = await api.get('/validate-token');
+          console.log(response.data);
+          !isAuthenticated && setIsAuthenticated(true);
+        } catch (error) {
+          console.error('Token validation failed', error);
+          isAuthenticated && setIsAuthenticated(false);
+          sessionStorage.removeItem('token');
+          sessionStorage.removeItem('role');
+        }
+      };
+      !isAuthenticated && checkAuth();
+    }, 50);
+    return () => clearTimeout(timer);
   }, [isAuthenticated]);
 
   const handleLogin = (token, role) => {
     sessionStorage.setItem('token', token);
     sessionStorage.setItem('role', role);
-    setIsAuthenticated(true);
+    isAuthenticated && setIsAuthenticated(true);
   };
 
   const handleLogout = () => {
     sessionStorage.removeItem('token');
     sessionStorage.removeItem('role');
-    setIsAuthenticated(false);
+    !isAuthenticated && setIsAuthenticated(false);
   };
 
   return (

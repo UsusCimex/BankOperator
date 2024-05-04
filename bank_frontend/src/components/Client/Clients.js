@@ -4,41 +4,39 @@ import { getAllClients, getClientsWithFilters, executeCustomQuery } from '../../
 import { AddClientModal } from './AddClientModal';
 import '../ListView.css';
 
+// Основной компонент для управления клиентами
 function Clients() {
+  // Состояния компонента
   const [clients, setClients] = useState([]);
   const [modalOpen, setModalOpen] = useState(false);
-  const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [filters, setFilters] = useState({
-    name: '',
-    email: '',
-    phone: '',
-    passport: '',
-    birthDate: '',
-    creditStatus: '',
-    hasCredit: '',
-    isBlocked: ''
+    name: '', email: '', phone: '', passport: '', birthDate: '',
+    creditStatus: '', hasCredit: '', isBlocked: ''
   });
   const baseQuery = "SELECT * FROM client";
   const [userClientQuery, setUserClientQuery] = useState("");
+  const navigate = useNavigate();
   const role = sessionStorage.getItem('role');
 
+  // Загрузка сохраненных данных из sessionStorage при монтировании
   useEffect(() => {
     const savedQuery = sessionStorage.getItem('clientsQuery');
     const savedResults = sessionStorage.getItem('clientsResults');
     const savedFilters = sessionStorage.getItem('clientFilters');
-    if (savedQuery) {
-      setUserClientQuery(savedQuery);
-    }
+    if (savedQuery) setUserClientQuery(savedQuery);
     if (savedResults) {
-      setClients(JSON.parse(savedResults));
+      const parsedResults = JSON.parse(savedResults);
+      setClients(parsedResults);
     }
     if (savedFilters) {
-      setFilters(JSON.parse(savedFilters));
+      const parsedFilters = JSON.parse(savedFilters);
+      setFilters(filters => ({...filters, ...parsedFilters}));
     }
   }, []);
 
+  // Запрос списка клиентов
   const fetchClients = async () => {
     setLoading(true);
     try {
@@ -54,14 +52,13 @@ function Clients() {
     }
   };
 
+  // Обработчик изменений фильтров
   const handleFilterChange = (e) => {
     const { name, value } = e.target;
-    setFilters(prevFilters => ({
-      ...prevFilters,
-      [name]: value !== '' ? value : undefined
-    }));
+    setFilters(prevFilters => ({ ...prevFilters, [name]: value || '' }));
   };
 
+  // Применение фильтров
   const handleApplyFilters = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -79,6 +76,7 @@ function Clients() {
     }
   };
 
+  // Выполнение пользовательского SQL запроса
   const handleSubmitQuery = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -103,17 +101,9 @@ function Clients() {
       {role === "ROLE_ADMIN" && (
         <form onSubmit={handleSubmitQuery} className="form-standard">
           <div className="form-query-group">
-            <input 
-              type="text" 
-              value={baseQuery} 
-              disabled 
-              className="base-query-input" />
-            <input 
-              type="text" 
-              value={userClientQuery} 
-              onChange={(e) => setUserClientQuery(e.target.value)} 
-              placeholder="e.g., WHERE 1 = 1" 
-              className="user-query-input" />
+            <input type="text" value={baseQuery} disabled className="base-query-input" />
+            <input type="text" value={userClientQuery} onChange={(e) => setUserClientQuery(e.target.value)}
+              placeholder="e.g., WHERE 1 = 1" className="user-query-input" />
           </div>
           <small>You can use attributes like client_id, name, email, phone, passport_data, birth_date in your WHERE clause.</small>
           <button type="submit" className="execute-query-button">Execute Query</button>

@@ -2,9 +2,11 @@ import React, { useState } from 'react';
 import { createClient } from '../../services/ClientService';
 import '../AddForm.css';
 
+// Модальное окно для добавления нового клиента
 export function AddClientModal({ onClose, onClientAdded }) {
     const [error, setError] = useState(null);
 
+    // Обработчик отправки формы
     const handleSubmit = async (event) => {
         event.preventDefault();
         const formData = new FormData(event.target);
@@ -18,11 +20,11 @@ export function AddClientModal({ onClose, onClientAdded }) {
 
         try {
             await createClient(clientData);
-            onClientAdded();
-            onClose();
+            onClientAdded(); // Callback после успешного добавления клиента
+            onClose(); // Закрытие модального окна
         } catch (error) {
             console.error('Failed to save client:', error);
-            setError('Failed to save client. Please try again.'); // Set error message to display in the modal
+            setError(`Failed to save client. Please try again.\nError: ${error.message}`);
         }
     };
 
