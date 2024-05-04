@@ -1,9 +1,12 @@
 import React, { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, Link } from 'react-router-dom';
 import Select from 'react-select';
 import { getCreditById, updateCredit, deleteCredit } from '../../services/CreditService';
 import { getAllClients } from '../../services/ClientService';
 import { getAllTariffs } from '../../services/TariffService';
+import { getCreditPayments } from '../../services/PaymentService'
+import { AddPaymentModal } from '../Payment/AddPaymentModal'
+import '../History.css'
 import '../DetailEdit.css';
 
 const statusOptions = [
@@ -26,6 +29,9 @@ function CreditPage() {
   const [tariffsOptions, setTariffsOptions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+
+  const [payments, setPayments] = useState([]);
+  const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
 
   useEffect(() => {
     async function fetchData() {
@@ -62,6 +68,9 @@ function CreditPage() {
           status: data.status || '',
           startDate: data.startDate || ''
         });
+
+        const paymentsData = await getCreditPayments(creditId);
+        setPayments(paymentsData);
       } catch (error) {
         setError("Failed to fetch credit details: " + error.message);
       }
@@ -109,6 +118,19 @@ function CreditPage() {
 
   const dismissError = () => {
     setError(null);
+  };
+
+  const handleAddPayment = () => {
+    setIsPaymentModalOpen(true);
+  };
+
+  const handlePaymentModalClose = () => {
+    setIsPaymentModalOpen(false);
+  };
+
+  const refreshPayments = async () => {
+    const paymentsData = await getCreditPayments(creditId);
+    setPayments(paymentsData);
   };
 
   if (loading) return <div>Loading...</div>;
@@ -181,7 +203,25 @@ function CreditPage() {
       <div className="buttons">
         <button className="button" onClick={handleUpdate}>Save Changes</button>
         <button className="button" onClick={handleDelete}>Delete Credit</button>
+        <button className="button" onClick={handleAddPayment}>Add Payment</button>
       </div>
+      <h3>Payment History</h3>
+      <div className='history'>
+        {payments.map(payment => (
+          <Link to={`/payments/${payment.id}`} key={`payment${payment.id}`} className="history-button">
+            <div className="history-content">
+              <div>Amount: {payment.amount}</div>
+              <div>Date: {new Date(payment.date).toLocaleDateString()}</div>
+              <div>Type: {payment.type}</div>
+              <div>Commission: {payment.commission}</div>
+            </div>
+          </Link>
+        ))}
+      </div>
+      {isPaymentModalOpen && <AddPaymentModal 
+                                onClose={handlePaymentModalClose} 
+                                onPaymentAdded={refreshPayments} 
+                                currentCreditId={ credit.id }/>}
     </div>
   );
 }

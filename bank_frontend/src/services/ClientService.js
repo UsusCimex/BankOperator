@@ -3,7 +3,7 @@ import api from '../authorization/AxiosApi';
 export const getAllClients = async () => {
   try {
     const response = await api.get('/clients');
-    return response.data;
+    return response.data || [];
   } catch (error) {
     throw new Error('Failed to fetch clients', error);
   }
@@ -48,7 +48,7 @@ export const deleteClient = async (id) => {
 export const executeCustomQuery = async (query) => {
   try {
     const response = await api.post('/clients/customQuery', { query }); 
-    return response.data;
+    return response.data || [];
   } catch (error) {
     throw new Error('Failed to execute custom query', error);
   }
@@ -68,7 +68,7 @@ export const getClientsWithFilters = async (filters) => {
     });
 
     const response = await api.get(`/clients?${params}`);
-    return response.data;
+    return response.data || [];
   } catch (error) {
     throw new Error('Failed to fetch clients with filters', error);
   }

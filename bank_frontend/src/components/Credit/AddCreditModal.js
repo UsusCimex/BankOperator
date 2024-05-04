@@ -5,10 +5,10 @@ import { getAllClients } from '../../services/ClientService';
 import { getAllTariffs } from '../../services/TariffService';
 import '../AddForm.css';
 
-export function AddCreditModal({ onClose, onCreditAdded }) {
+export function AddCreditModal({ onClose, onCreditAdded, currentClient }) {
   const [clientsOptions, setClientsOptions] = useState([]);
   const [tariffsOptions, setTariffsOptions] = useState([]);
-  const [selectedClient, setSelectedClient] = useState(null);
+  const [selectedClient, setSelectedClient] = useState(currentClient || null);
   const [selectedTariff, setSelectedTariff] = useState(null);
   const [selectedStatus, setSelectedStatus] = useState(null);
   const [startDate, setStartDate] = useState('');
@@ -67,6 +67,7 @@ export function AddCreditModal({ onClose, onCreditAdded }) {
             onChange={setSelectedClient}
             options={clientsOptions}
             placeholder="Select Client"
+            isDisabled={!!currentClient}
           />
           <Select
             classNamePrefix="react-select"

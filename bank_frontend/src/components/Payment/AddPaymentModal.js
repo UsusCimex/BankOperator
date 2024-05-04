@@ -4,7 +4,7 @@ import { createPayment } from '../../services/PaymentService';
 import { getAllCredits } from '../../services/CreditService';
 import '../AddForm.css';
 
-export function AddPaymentModal({ onClose, onPaymentAdded }) {
+export function AddPaymentModal({ onClose, onPaymentAdded, currentCreditId }) {
   const [creditsOptions, setCreditsOptions] = useState([]);
   const [selectedCredit, setSelectedCredit] = useState(null);
   const [error, setError] = useState('');
@@ -13,17 +13,23 @@ export function AddPaymentModal({ onClose, onPaymentAdded }) {
     const loadCredits = async () => {
       try {
         const credits = await getAllCredits();
-        setCreditsOptions(credits.map(credit => ({
+        const options = credits.map(credit => ({
           value: credit.id,
-          label: `Credit ID: ${credit.id}, Amount: ${credit.amount}`
-        })));
+          label: `Client: ${credit.client.name}, phone: ${credit.client.phone}, Amount: ${credit.amount}`
+        }));
+        setCreditsOptions(options);
+
+        if (currentCreditId) {
+          const currentCreditOption = options.find(option => option.value === currentCreditId);
+          setSelectedCredit(currentCreditOption);
+        }
       } catch (err) {
         console.error('Failed to fetch credits:', err);
         setError('Failed to load credits');
       }
     };
     loadCredits();
-  }, []);
+  }, [currentCreditId]);
 
   const handleSubmit = async (event) => {
     event.preventDefault();
@@ -62,6 +68,7 @@ export function AddPaymentModal({ onClose, onPaymentAdded }) {
             onChange={setSelectedCredit}
             options={creditsOptions}
             placeholder="Select Credit"
+            isDisabled={!!currentCreditId}
           />
           <input type="number" name="amount" placeholder="Amount" required />
           <input type="datetime-local" name="paymentDate" placeholder="Payment Date" required />

@@ -3,9 +3,19 @@ import api from '../authorization/AxiosApi'
 export const getAllCredits = async () => {
   try {
     const response = await api.get('/credits');
-    return response.data;
+    return response.data || [];
   } catch (error) {
     console.error('Error fetching credits:', error);
+    throw error;
+  }
+};
+
+export const getClientCredits = async (clientId) => {
+  try {
+    const response = await api.get(`/credits/client/${clientId}`);
+    return response.data || [];
+  } catch (error) {
+    console.error(`Error fetching credits for client ${clientId}:`, error);
     throw error;
   }
 };
@@ -57,7 +67,7 @@ export const deleteCredit = async (id) => {
 export const executeCustomQuery = async (query) => {
   try {
     const response = await api.post('/credits/customQuery', { query });
-    return response.data;
+    return response.data || [];
   } catch (error) {
     console.error('Failed to execute custom query', error);
     throw error;

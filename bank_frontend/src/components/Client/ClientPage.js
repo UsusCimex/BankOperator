@@ -1,7 +1,10 @@
 import React, { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, Link } from 'react-router-dom';
 import { getClientById, updateClient, deleteClient } from '../../services/ClientService';
+import { getClientCredits } from '../../services/CreditService';
+import { AddCreditModal } from '../Credit/AddCreditModal';
 import '../DetailEdit.css';
+import '../History.css';
 
 function ClientPage() {
   const { clientId } = useParams();
@@ -14,12 +17,16 @@ function ClientPage() {
     birthDate: ''
   });
   const [status, setStatus] = useState({ loading: true, error: null });
+  const [credits, setCredits] = useState([]);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   useEffect(() => {
     const fetchClient = async () => {
       try {
         const data = await getClientById(clientId);
+        const creditsData = await getClientCredits(clientId);
         setClient(data);
+        setCredits(creditsData);
         setStatus(prev => ({ ...prev, loading: false }));
       } catch (error) {
         console.error("Failed to fetch client details:", error);
@@ -30,11 +37,24 @@ function ClientPage() {
     fetchClient();
   }, [clientId]);
 
+  const refreshCredits = async () => {
+    const creditsData = await getClientCredits(clientId);
+    setCredits(creditsData);
+  };
+
+  const handleAddCredit = () => {
+    setIsModalOpen(true);
+  };
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+  };
+
   const handleUpdate = async () => {
     try {
       await updateClient(clientId, client);
       alert('Client updated successfully');
-      navigate('/clients'); // Navigate after successful update
+      navigate('/clients');
     } catch (error) {
       console.error("Update error:", error);
       setStatus({ error: error.message || "Failed to update client" });
@@ -47,7 +67,7 @@ function ClientPage() {
       try {
         await deleteClient(clientId);
         alert('Client deleted successfully');
-        navigate('/clients'); // Redirect after deletion
+        navigate('/clients');
       } catch (error) {
         console.error("Delete error:", error);
         setStatus({ error: error.message || "Failed to delete client" });
@@ -98,6 +118,23 @@ function ClientPage() {
       <div className="buttons">
         <button className="button" onClick={handleUpdate}>Save Changes</button>
         <button className="button" onClick={handleDelete}>Delete User</button>
+        <button className="button" onClick={handleAddCredit}>Add Credit</button>
+      </div>
+      {isModalOpen && <AddCreditModal 
+                        onClose={handleCloseModal} 
+                        onCreditAdded={refreshCredits} 
+                        currentClient={{ value: client.id, label: client.name }}/>}
+      <h3>Credit History</h3>
+      <div className="history">
+        {credits.map(credit => (
+          <Link to={`/credits/${credit.id}`} key={`credit${credit.id}`} className="history-button">
+            <div className="history-content">
+              <strong>Tariff: {credit.tariff.name}</strong>
+              <div>Amount: {credit.amount}</div>
+              <div>Status: {credit.status}</div>
+            </div>
+          </Link>
+        ))}
       </div>
     </div>
   );
