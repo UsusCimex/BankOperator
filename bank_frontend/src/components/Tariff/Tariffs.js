@@ -1,34 +1,40 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { executeCustomQuery } from '../../services/TariffService';
+import { executeCustomQuery, getTariffsWithFilters } from '../../services/TariffService';
 import AddTariffModal from './AddTariffModal';
 import '../ListView.css';
 
 function Tariffs() {
   const [tariffs, setTariffs] = useState([]);
-  const baseQuery = "SELECT * FROM tariff";
-  const [userTariffQuery, setUserTariffQuery] = useState("");
   const [modalOpen, setModalOpen] = useState(false);
-  const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const role = localStorage.getItem('role')
+  const [filters, setFilters] = useState({
+    name: '', loanTerm: '', interestRate: '', maxAmount: ''
+  });
+  const baseQuery = "SELECT * FROM tariff";
+  const [userTariffQuery, setUserTariffQuery] = useState("");
+  const navigate = useNavigate();
+  const role = sessionStorage.getItem('role');
 
   useEffect(() => {
     const savedQuery = sessionStorage.getItem('userTariffQuery');
     const savedResults = sessionStorage.getItem('queryTariffResults');
+    const savedFilters = sessionStorage.getItem('tariffFilters');
     if (savedQuery) setUserTariffQuery(savedQuery);
     if (savedResults) setTariffs(JSON.parse(savedResults));
+    if (savedFilters) {
+      const parsedFilters = JSON.parse(savedFilters);
+      setFilters(filters => ({...filters, ...parsedFilters}));
+    }
   }, []);
 
   const fetchTariffs = async () => {
     setLoading(true);
-    const fullQuery = `${baseQuery} ${userTariffQuery}`;
     try {
-      const data = await executeCustomQuery(fullQuery);
-      setTariffs(data || []);
-      sessionStorage.setItem('queryTariffResults', JSON.stringify(data || []));
-      sessionStorage.setItem('userTariffQuery', userTariffQuery);
+      const data = await getTariffsWithFilters(filters);
+      setTariffs(data);
+      sessionStorage.setItem('queryTariffResults', JSON.stringify(data));
       setError(null);
     } catch (error) {
       console.error("Failed to fetch tariff details:", error);
@@ -38,9 +44,31 @@ function Tariffs() {
     }
   };
 
-  const handleSubmitQuery = (e) => {
+  const handleFilterChange = (e) => {
+    const { name, value } = e.target;
+    setFilters(prevFilters => ({ ...prevFilters, [name]: value }));
+  };
+
+  const handleApplyFilters = async (e) => {
     e.preventDefault();
     fetchTariffs();
+  };
+
+  const handleExecuteQuery = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    try {
+      const data = await executeCustomQuery(`${baseQuery} ${userTariffQuery}`);
+      setTariffs(data || []);
+      sessionStorage.setItem('queryTariffResults', JSON.stringify(data || []));
+      sessionStorage.setItem('userTariffQuery', userTariffQuery);
+      setError(null);
+    } catch (error) {
+      console.error("Failed to execute SQL query:", error);
+      setError(error.message);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleTariffClick = (tariffId) => {
@@ -53,28 +81,53 @@ function Tariffs() {
   };
 
   return (
-    <div>
+    <div className="container">
       <h2>Tariffs</h2>
-      <form onSubmit={handleSubmitQuery} className="form-standard">
-        <div className="form-input-group">
+      {role === "ROLE_ADMIN" && (
+      <form onSubmit={handleExecuteQuery} className="form-standard">
+        <div className="form-query-group">
           <input 
             type="text" 
             value={baseQuery} 
             disabled 
-            className="base-query-input form-input"
+            className="base-query-input"
           />
           <input 
             type="text" 
             value={userTariffQuery} 
             onChange={(e) => setUserTariffQuery(e.target.value)} 
-            placeholder="e.g., WHERE 1 = 1"
-            className="user-query-input form-input"
+            placeholder="e.g., WHERE name = 'Standard'"
+            className="user-query-input"
           />
         </div>
         <small>You can use attributes like tariff_id, name, loan term, interest rate, max amount in your WHERE clause.</small>
-        <button type="submit" className="form-button">Execute Query</button>
+        <button type="submit" className="execute-query-button">Execute Query</button>
       </form>
-      {(role === "ROLE_TARIFF_MANAGER" || role === "ROLE_ADMIN") && <button onClick={() => setModalOpen(true)} className="button button-primary">Add Tariff</button>}
+      )}
+      <form onSubmit={handleApplyFilters} className="filter-form">
+        <div className="form-container">
+          {Object.keys(filters).map((key) => (
+            <div key={key} className="form-input-group">
+              <label htmlFor={key}>{key.charAt(0).toUpperCase() + key.slice(1)}</label>
+              <input
+                type="text"
+                id={key}
+                name={key}
+                value={filters[key]}
+                onChange={handleFilterChange}
+                placeholder={`Enter ${key}`}
+                className="form-input"
+              />
+            </div>
+          ))}
+        </div>
+        <button type="submit" className="form-button">Apply Filters</button>
+      </form>
+      {(role === "ROLE_TARIFF_MANAGER" || role === "ROLE_ADMIN") && (
+        <div className="button-group">
+          <button onClick={() => setModalOpen(true)} className="add-button">Add Tariff</button>
+        </div>
+      )}
       {modalOpen && <AddTariffModal onClose={() => setModalOpen(false)} onTariffAdded={handleTariffAdded} />}
       {loading && <div>Loading...</div>}
       {error && <div className="alert-danger">Error: {error}</div>}

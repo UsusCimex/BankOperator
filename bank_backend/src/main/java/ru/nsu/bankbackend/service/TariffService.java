@@ -8,10 +8,15 @@ import jakarta.persistence.PersistenceContext;
 import jakarta.persistence.Query;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
+import ru.nsu.bankbackend.cpecification.PaymentSpecification;
+import ru.nsu.bankbackend.cpecification.TariffSpecification;
+import ru.nsu.bankbackend.model.Payment;
 import ru.nsu.bankbackend.model.Tariff;
 import ru.nsu.bankbackend.repository.TariffRepository;
 
+import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -26,6 +31,26 @@ public class TariffService {
 
     public List<Tariff> findAll() {
         return tariffRepository.findAll();
+    }
+
+    @Transactional
+    public List<Tariff> findWithFilters(String name, Long loanTerm, Long interestRate, Long maxAmount) {
+        Specification<Tariff> spec = Specification.where(null);
+
+        if (name != null) {
+            spec = spec.and(TariffSpecification.hasNameLike(name));
+        }
+        if (loanTerm != null) {
+            spec = spec.and(TariffSpecification.hasLoanTermEqualTo(loanTerm));
+        }
+        if (interestRate != null) {
+            spec = spec.and(TariffSpecification.hasInterestRateEqualTo(interestRate));
+        }
+        if (maxAmount != null) {
+            spec = spec.and(TariffSpecification.hasMaxAmountEqualTo(maxAmount));
+        }
+
+        return tariffRepository.findAll(spec);
     }
 
     public Optional<Tariff> findById(Long id) {

@@ -10,6 +10,26 @@ export const getAllCredits = async () => {
   }
 };
 
+export const getCreditsWithFilters = async (filters) => {
+  try {
+    const params = new URLSearchParams();
+    Object.entries(filters).forEach(([key, value]) => {
+      if (value || value === false) {
+        if ((key === 'startDate' || key === 'endDate') && value) {
+          params.append(key, new Date(value).toISOString().split('T')[0]);
+        } else {
+          params.append(key, value);
+        }
+      }
+    });
+
+    const response = await api.get(`/credits?${params}`);
+    return response.data || [];
+  } catch (error) {
+    throw new Error('Failed to fetch credits with filters', error);
+  }
+};
+
 export const getClientCredits = async (clientId) => {
   try {
     const response = await api.get(`/credits/client/${clientId}`);

@@ -1,15 +1,18 @@
 package ru.nsu.bankbackend.controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import ru.nsu.bankbackend.dto.CreditDTO;
+import ru.nsu.bankbackend.model.Client;
 import ru.nsu.bankbackend.model.Credit;
 import ru.nsu.bankbackend.service.CreditService;
 
 import java.util.Collections;
+import java.util.Date;
 import java.util.List;
 
 @RestController
@@ -19,20 +22,23 @@ public class CreditController {
     @Autowired
     private CreditService creditService;
 
-    @GetMapping
+    @GetMapping("/all")
     @PreAuthorize("hasAnyRole('ADMIN', 'TARIFF_MANAGER', 'OPERATOR','ACCOUNTANT')")
     public List<Credit> getAllCredits() {
         return creditService.findAll();
     }
 
-    @GetMapping("/client/{clientId}")
+    @GetMapping
     @PreAuthorize("hasAnyRole('ADMIN', 'TARIFF_MANAGER', 'OPERATOR','ACCOUNTANT')")
-    public ResponseEntity<List<Credit>> getCreditsByClientId(@PathVariable Long clientId) {
-        List<Credit> credits = creditService.findByClientId(clientId);
-        if (credits.isEmpty()) {
-            return ResponseEntity.noContent().build();
-        }
-        return ResponseEntity.ok(credits);
+    public List<Credit> getCreditsWithFilters(
+            @RequestParam(required = false) String clientName,
+            @RequestParam(required = false) String tariffName,
+            @RequestParam(required = false) Long amount,
+            @RequestParam(required = false) String status,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) Date startDate,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) Date endDate
+    ) {
+        return creditService.findWithFilters(clientName, tariffName, amount, status, startDate, endDate);
     }
 
     @GetMapping("/{id}")

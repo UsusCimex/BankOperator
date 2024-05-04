@@ -8,7 +8,9 @@ import jakarta.persistence.PersistenceContext;
 import jakarta.persistence.Query;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
+import ru.nsu.bankbackend.cpecification.CreditSpecification;
 import ru.nsu.bankbackend.dto.CreditDTO;
 import ru.nsu.bankbackend.model.Client;
 import ru.nsu.bankbackend.model.Credit;
@@ -17,6 +19,7 @@ import ru.nsu.bankbackend.repository.ClientRepository;
 import ru.nsu.bankbackend.repository.CreditRepository;
 import ru.nsu.bankbackend.repository.TariffRepository;
 
+import java.math.BigDecimal;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
@@ -38,6 +41,32 @@ public class CreditService {
 
     public List<Credit> findAll() {
         return creditRepository.findAll();
+    }
+
+    @Transactional
+    public List<Credit> findWithFilters(String clientName, String tariffName, Long amount, String status, Date startDate, Date endDate) {
+        Specification<Credit> spec = Specification.where(null);
+
+        if (clientName != null) {
+            spec = spec.and(CreditSpecification.hasClientNameLike(clientName));
+        }
+        if (tariffName != null) {
+            spec = spec.and(CreditSpecification.hasTariffNameLike(tariffName));
+        }
+        if (amount != null) {
+            spec = spec.and(CreditSpecification.hasAmount(amount));
+        }
+        if (status != null) {
+            spec = spec.and(CreditSpecification.hasStatus(Credit.convertStringToStatus(status)));
+        }
+        if (startDate != null) {
+            spec = spec.and(CreditSpecification.hasStartDateAfter(startDate));
+        }
+        if (endDate != null) {
+            spec = spec.and(CreditSpecification.hasEndDateBefore(endDate));
+        }
+
+        return creditRepository.findAll(spec);
     }
 
     public Optional<Credit> findById(Long id) {

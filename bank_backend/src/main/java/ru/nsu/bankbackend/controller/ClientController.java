@@ -7,6 +7,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import ru.nsu.bankbackend.model.Client;
+import ru.nsu.bankbackend.model.Credit;
 import ru.nsu.bankbackend.service.ClientService;
 
 import java.util.Collections;
@@ -18,6 +19,12 @@ import java.util.List;
 public class ClientController {
     @Autowired
     private ClientService clientService;
+
+    @GetMapping("/all")
+    @PreAuthorize("hasAnyRole('ADMIN', 'TARIFF_MANAGER', 'OPERATOR','ACCOUNTANT')")
+    public List<Client> getAllClient() {
+        return clientService.findAll();
+    }
 
     @GetMapping
     @PreAuthorize("hasAnyRole('ADMIN', 'TARIFF_MANAGER', 'OPERATOR','ACCOUNTANT')")

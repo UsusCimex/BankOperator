@@ -10,6 +10,22 @@ export const getAllTariffs = async () => {
   }
 };
 
+export const getTariffsWithFilters = async (filters) => {
+  try {
+    const params = new URLSearchParams();
+    Object.entries(filters).forEach(([key, value]) => {
+      if (value || value === false) {
+        params.append(key, value);
+      }
+    });
+
+    const response = await api.get(`/tariffs?${params}`);
+    return response.data || [];
+  } catch (error) {
+    throw new Error('Failed to fetch tariffs with filters', error);
+  }
+}
+
 export const getTariffById = async (id) => {
   try {
     const response = await api.get(`/tariffs/${id}`);

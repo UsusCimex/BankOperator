@@ -61,15 +61,15 @@ function App() {
         try {
           const response = await api.get('/validate-token');
           console.log(response.data);
-          !isAuthenticated && setIsAuthenticated(true);
+          setIsAuthenticated(true);
         } catch (error) {
           console.error('Token validation failed', error);
-          isAuthenticated && setIsAuthenticated(false);
+          setIsAuthenticated(false);
           sessionStorage.removeItem('token');
           sessionStorage.removeItem('role');
         }
       };
-      !isAuthenticated && checkAuth();
+      checkAuth();
     }, 50);
     return () => clearTimeout(timer);
   }, [isAuthenticated]);
@@ -77,13 +77,13 @@ function App() {
   const handleLogin = (token, role) => {
     sessionStorage.setItem('token', token);
     sessionStorage.setItem('role', role);
-    isAuthenticated && setIsAuthenticated(true);
+    setIsAuthenticated(true);
   };
 
   const handleLogout = () => {
     sessionStorage.removeItem('token');
     sessionStorage.removeItem('role');
-    !isAuthenticated && setIsAuthenticated(false);
+    setIsAuthenticated(false);
   };
 
   return (

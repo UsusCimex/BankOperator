@@ -38,8 +38,8 @@ export function AddCreditModal({ onClose, onCreditAdded, currentClient }) {
   const handleSubmit = async (event) => {
     event.preventDefault();
     const creditData = {
-      client: selectedClient ? selectedClient.value : null,
-      tariff: selectedTariff ? selectedTariff.value : null,
+      clientId: selectedClient ? selectedClient.value : null,
+      tariffId: selectedTariff ? selectedTariff.value : null,
       amount: event.target.amount.value,
       status: selectedStatus ? selectedStatus.value : '',
       startDate: startDate,

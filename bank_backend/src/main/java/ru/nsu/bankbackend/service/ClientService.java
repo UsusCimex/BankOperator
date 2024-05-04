@@ -28,6 +28,10 @@ public class ClientService {
     @PersistenceContext
     private EntityManager entityManager;
 
+    public List<Client> findAll() {
+        return clientRepository.findAll();
+    }
+
     @Transactional
     public List<Client> findWithFilters(String name, String email, String phone, String passport, Date birthDate, String creditStatus, Boolean hasCredit, Boolean hasBlock) {
         Specification<Client> spec = Specification.where(null);

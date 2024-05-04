@@ -3,18 +3,17 @@ package ru.nsu.bankbackend.service;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import io.micrometer.observation.ObservationFilter;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import jakarta.persistence.Query;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
+import ru.nsu.bankbackend.cpecification.PaymentSpecification;
 import ru.nsu.bankbackend.dto.PaymentDTO;
-import ru.nsu.bankbackend.model.Client;
 import ru.nsu.bankbackend.model.Credit;
 import ru.nsu.bankbackend.model.Payment;
-import ru.nsu.bankbackend.model.Tariff;
 import ru.nsu.bankbackend.repository.CreditRepository;
 import ru.nsu.bankbackend.repository.PaymentRepository;
 
@@ -96,6 +95,26 @@ public class PaymentService {
         paymentDTO.setAmount(payment.getAmount());
         paymentDTO.setCreditId(payment.getCredit().getId());
         return paymentDTO;
+    }
+
+    @Transactional
+    public List<Payment> findWithFilters(String clientName, Long amount, Date paymentDate, Long commission) {
+        Specification<Payment> spec = Specification.where(null);
+
+        if (clientName != null) {
+            spec = spec.and(PaymentSpecification.hasClientNameLike(clientName));
+        }
+        if (amount != null) {
+            spec = spec.and(PaymentSpecification.hasAmountEqualTo(amount));
+        }
+        if (paymentDate != null) {
+            spec = spec.and(PaymentSpecification.hasPaymentDateOn(paymentDate));
+        }
+        if (commission != null) {
+            spec = spec.and(PaymentSpecification.hasCommissionEqualTo(commission));
+        }
+
+        return paymentRepository.findAll(spec);
     }
 
     @Transactional

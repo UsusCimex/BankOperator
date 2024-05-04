@@ -1,5 +1,35 @@
 import api from '../authorization/AxiosApi'
 
+export const getAllPayments = async () => {
+  try {
+    const response = await api.get('/payments');
+    return response.data || [];
+  } catch (error) {
+    console.error('Error fetching payments:', error);
+    throw error;
+  }
+};
+
+export const getPaymentsWithFilters = async (filters) => {
+  try {
+    const params = new URLSearchParams();
+    Object.entries(filters).forEach(([key, value]) => {
+      if (value || value === false) {
+        if (key === 'paymentDate' && value) {
+          params.append(key, new Date(value).toISOString().split('T')[0]);
+        } else {
+          params.append(key, value);
+        }
+      }
+    });
+
+    const response = await api.get(`/payments?${params}`);
+    return response.data || [];
+  } catch (error) {
+    throw new Error('Failed to fetch payments with filters', error);
+  }
+};
+
 export const getPaymentById = async (id) => {
   try {
     const response = await api.get(`/payments/${id}`);

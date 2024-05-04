@@ -1,6 +1,7 @@
 package ru.nsu.bankbackend.controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -9,6 +10,7 @@ import ru.nsu.bankbackend.model.Tariff;
 import ru.nsu.bankbackend.service.TariffService;
 
 import java.util.Collections;
+import java.util.Date;
 import java.util.List;
 
 @RestController
@@ -18,10 +20,21 @@ public class TariffController {
     @Autowired
     private TariffService tariffService;
 
-    @GetMapping
+    @GetMapping("/all")
     @PreAuthorize("hasAnyRole('ADMIN', 'TARIFF_MANAGER', 'OPERATOR','ACCOUNTANT')")
     public List<Tariff> getAllTariffs() {
         return tariffService.findAll();
+    }
+
+    @GetMapping
+    @PreAuthorize("hasAnyRole('ADMIN', 'TARIFF_MANAGER', 'OPERATOR','ACCOUNTANT')")
+    public List<Tariff> getTariffWithFilters(
+            @RequestParam(required = false) String name,
+            @RequestParam(required = false) Long loanTerm,
+            @RequestParam(required = false) Long interestRate,
+            @RequestParam(required = false) Long maxAmount
+    ) {
+        return tariffService.findWithFilters(name, loanTerm, interestRate, maxAmount);
     }
 
     @GetMapping("/{id}")

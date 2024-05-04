@@ -1,6 +1,7 @@
 package ru.nsu.bankbackend.controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -11,6 +12,7 @@ import ru.nsu.bankbackend.model.Payment;
 import ru.nsu.bankbackend.service.PaymentService;
 
 import java.util.Collections;
+import java.util.Date;
 import java.util.List;
 
 @RestController
@@ -19,10 +21,21 @@ public class PaymentController {
     @Autowired
     private PaymentService paymentService;
 
-    @GetMapping
+    @GetMapping("/all")
     @PreAuthorize("hasAnyRole('ADMIN', 'TARIFF_MANAGER', 'OPERATOR','ACCOUNTANT')")
     public List<Payment> getAllPayments() {
         return paymentService.findAll();
+    }
+
+    @GetMapping
+    @PreAuthorize("hasAnyRole('ADMIN', 'TARIFF_MANAGER', 'OPERATOR','ACCOUNTANT')")
+    public List<Payment> getPaymentsWithFilters(
+            @RequestParam(required = false) String clientName,
+            @RequestParam(required = false) Long amount,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) Date paymentDate,
+            @RequestParam(required = false) Long commission
+    ) {
+        return paymentService.findWithFilters(clientName, amount, paymentDate, commission);
     }
 
     @GetMapping("/credit/{creditId}")
