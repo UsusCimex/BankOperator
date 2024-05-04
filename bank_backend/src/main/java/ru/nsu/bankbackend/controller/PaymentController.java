@@ -6,6 +6,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import ru.nsu.bankbackend.dto.PaymentDTO;
+import ru.nsu.bankbackend.model.Credit;
 import ru.nsu.bankbackend.model.Payment;
 import ru.nsu.bankbackend.service.PaymentService;
 
@@ -22,6 +23,16 @@ public class PaymentController {
     @PreAuthorize("hasAnyRole('ADMIN', 'TARIFF_MANAGER', 'OPERATOR','ACCOUNTANT')")
     public List<Payment> getAllPayments() {
         return paymentService.findAll();
+    }
+
+    @GetMapping("/credit/{creditId}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'TARIFF_MANAGER', 'OPERATOR','ACCOUNTANT')")
+    public ResponseEntity<List<Payment>> getCreditsByCreditId(@PathVariable Long creditId) {
+        List<Payment> payments = paymentService.findByCreditId(creditId);
+        if (payments.isEmpty()) {
+            return ResponseEntity.noContent().build();
+        }
+        return ResponseEntity.ok(payments);
     }
 
     @GetMapping("/{id}")

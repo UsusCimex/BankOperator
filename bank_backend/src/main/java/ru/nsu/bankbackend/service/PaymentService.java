@@ -37,6 +37,10 @@ public class PaymentService {
         return paymentRepository.findAll();
     }
 
+    public List<Payment> findByCreditId(Long creditId) {
+        return paymentRepository.findByCreditId(creditId);
+    }
+
     public Optional<Payment> findById(Long id) {
         return paymentRepository.findById(id);
     }

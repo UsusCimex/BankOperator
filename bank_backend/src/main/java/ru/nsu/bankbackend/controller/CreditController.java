@@ -25,6 +25,16 @@ public class CreditController {
         return creditService.findAll();
     }
 
+    @GetMapping("/client/{clientId}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'TARIFF_MANAGER', 'OPERATOR','ACCOUNTANT')")
+    public ResponseEntity<List<Credit>> getCreditsByClientId(@PathVariable Long clientId) {
+        List<Credit> credits = creditService.findByClientId(clientId);
+        if (credits.isEmpty()) {
+            return ResponseEntity.noContent().build();
+        }
+        return ResponseEntity.ok(credits);
+    }
+
     @GetMapping("/{id}")
     @PreAuthorize("hasAnyRole('ADMIN', 'OPERATOR')")
     public ResponseEntity<Credit> getCreditById(@PathVariable Long id) {

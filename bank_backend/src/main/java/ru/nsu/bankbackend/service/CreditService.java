@@ -44,6 +44,10 @@ public class CreditService {
         return creditRepository.findById(id);
     }
 
+    public List<Credit> findByClientId(Long clientId) {
+        return creditRepository.findByClientId(clientId);
+    }
+
     @Transactional
     public Credit save(CreditDTO creditDetail) {
         Client client = clientRepository.findById(creditDetail.getClientId())
