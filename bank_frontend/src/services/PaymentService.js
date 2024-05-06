@@ -1,8 +1,8 @@
 import api from '../authorization/AxiosApi'
 
-export const getAllPayments = async () => {
+export const getAllPayments = async (page) => {
   try {
-    const response = await api.get('/payments');
+    const response = await api.get(`/payments?page=${page}`);
     return response.data || [];
   } catch (error) {
     console.error('Error fetching payments:', error);
@@ -10,9 +10,10 @@ export const getAllPayments = async () => {
   }
 };
 
-export const getPaymentsWithFilters = async (filters) => {
+export const getPaymentsWithFilters = async (page, filters) => {
   try {
     const params = new URLSearchParams();
+    params.append('page', page);
     Object.entries(filters).forEach(([key, value]) => {
       if (value || value === false) {
         if (key === 'paymentDate' && value) {
@@ -33,7 +34,7 @@ export const getPaymentsWithFilters = async (filters) => {
 export const getPaymentById = async (id) => {
   try {
     const response = await api.get(`/payments/${id}`);
-    return response.data;
+    return response.data || [];
   } catch (error) {
     console.error(`Failed to fetch payment with id ${id}`, error);
     throw new Error(error.response?.data.error || `Failed to fetch payment with id ${id}`);

@@ -157,6 +157,72 @@ label {
   margin: 20px 0;
 }
 
+.blocked {
+  background-color: #ffcccc;
+}
+
+.blockage-div {
+  display: flex;
+  align-items: center;
+  justify-content: space-between; /* Это гарантирует равное распределение пространства */
+}
+
+.input-date-blockage {
+  flex: 0 0 60%; /* flex-grow, flex-shrink, flex-basis */
+  margin-right: 10px; /* Отступ между полями */
+  padding: 5px 0px;
+}
+
+.blockage-button {
+  flex: 0 0 40%; /* flex-grow, flex-shrink, flex-basis */
+  background-color: #007bff; /* Синий цвет кнопки */
+  color: white; /* Белый текст */
+  padding: 8px 0px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.blockage-button:hover {
+  background-color: #0056b3;
+}
+
+/* Пагинация */
+.pagination {
+  display: flex;
+  list-style: none;
+  justify-content: center;
+  padding: 0;
+}
+
+.pagination li {
+  margin: 5px;
+}
+
+.pagination li a {
+  border: 1px solid #007bff;
+  padding: 5px 10px;
+  text-decoration: none;
+  color: #007bff;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.pagination li a:hover {
+  background-color: #007bff;
+  color: white;
+}
+
+.pagination .active a {
+  background-color: #007bff;
+  color: white;
+}
+
+.pagination .break a {
+  cursor: default;
+  color: #666;
+}
+
 /* Модальные окна */
 .modal-backdrop {
   position: fixed;

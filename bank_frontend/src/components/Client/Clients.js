@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
+import ReactPaginate from 'react-paginate';
 import { getAllClients, getClientsWithFilters, executeCustomQuery } from '../../services/ClientService';
 import { AddClientModal } from './AddClientModal';
 import '../ListView.css';
@@ -19,30 +20,17 @@ function Clients() {
   const [userClientQuery, setUserClientQuery] = useState("");
   const navigate = useNavigate();
   const role = sessionStorage.getItem('role');
+  const [currentPage, setCurrentPage] = useState(parseInt(sessionStorage.getItem('clientCurrentPage')) || 0);
+  const [pageCount, setPageCount] = useState(parseInt(sessionStorage.getItem('clientPageCount')) || 0);
 
-  // Загрузка сохраненных данных из sessionStorage при монтировании
-  useEffect(() => {
-    const savedQuery = sessionStorage.getItem('clientsQuery');
-    const savedResults = sessionStorage.getItem('clientsResults');
-    const savedFilters = sessionStorage.getItem('clientFilters');
-    if (savedQuery) setUserClientQuery(savedQuery);
-    if (savedResults) {
-      const parsedResults = JSON.parse(savedResults);
-      setClients(parsedResults);
-    }
-    if (savedFilters) {
-      const parsedFilters = JSON.parse(savedFilters);
-      setFilters(filters => ({...filters, ...parsedFilters}));
-    }
-  }, []);
-
-  // Запрос списка клиентов
-  const fetchClients = async () => {
+  const fetchClients = useCallback(async () => {
     setLoading(true);
     try {
-      const data = await getAllClients();
-      setClients(data);
-      sessionStorage.setItem('clientsResults', JSON.stringify(data));
+      const data = await getAllClients(currentPage);
+      setClients(data.content);
+      setPageCount(data.totalPages);
+      sessionStorage.setItem('clientCurrentPage', data.currentPage);
+      sessionStorage.setItem('clientPageCount', data.totalPages);
       setError(null);
     } catch (error) {
       console.error("Не удалось получить клиентов:", error);
@@ -50,23 +38,21 @@ function Clients() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [currentPage]);
 
-  // Обработчик изменений фильтров
-  const handleFilterChange = (e) => {
-    const { name, value } = e.target;
-    setFilters(prevFilters => ({ ...prevFilters, [name]: value || '' }));
-  };
-
-  // Применение фильтров
-  const handleApplyFilters = async (e) => {
-    e.preventDefault();
+  const loadDataWithFilters = useCallback(async () => {
     setLoading(true);
     try {
-      const filteredData = await getClientsWithFilters(filters);
-      sessionStorage.setItem('clientFilters', JSON.stringify(filters));
-      setClients(filteredData);
-      sessionStorage.setItem('clientsResults', JSON.stringify(filteredData));
+      const savedFilters = sessionStorage.getItem('clientFilters');
+      if (savedFilters) {
+          const parsedFilters = JSON.parse(savedFilters);
+          const filteredData = await getClientsWithFilters(currentPage, parsedFilters);
+          setClients(filteredData.content);
+          setPageCount(filteredData.totalPages);
+          sessionStorage.setItem('clientCurrentPage', currentPage.toString());
+          sessionStorage.setItem('clientPageCount', pageCount.toString());
+          sessionStorage.setItem('clientLastQueryType', 'filter');
+      }
       setError(null);
     } catch (error) {
       console.error("Не удалось отфильтровать клиентов:", error);
@@ -74,18 +60,21 @@ function Clients() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [currentPage, pageCount]);
 
-  // Выполнение пользовательского SQL запроса
-  const handleSubmitQuery = async (e) => {
-    e.preventDefault();
+  const executeSqlQuery = useCallback(async () => {
     setLoading(true);
     try {
-      const fullQuery = `${baseQuery} ${userClientQuery}`;
+      const query = sessionStorage.getItem('clientsQuery');
+      const fullQuery = `${baseQuery} ${query}`;
       const data = await executeCustomQuery(fullQuery);
-      sessionStorage.setItem('clientsQuery', userClientQuery);
       setClients(data);
-      sessionStorage.setItem('clientsResults', JSON.stringify(data));
+      setPageCount(0);
+      setCurrentPage(0);
+      sessionStorage.setItem('clientCurrentPage', '0');
+      sessionStorage.setItem('clientPageCount', '0');
+      sessionStorage.setItem('clientLastQueryType', 'sql');
+      
       setError(null);
     } catch (error) {
       console.error("Не удалось выполнить SQL запрос:", error);
@@ -93,6 +82,53 @@ function Clients() {
     } finally {
       setLoading(false);
     }
+  }, [baseQuery]);
+
+  // Загрузка сохраненных данных из sessionStorage при монтировании
+  useEffect(() => {
+    const savedQuery = sessionStorage.getItem('clientsQuery');
+    if (savedQuery) setUserClientQuery(savedQuery);
+
+    const savedFilters = sessionStorage.getItem('clientFilters');
+    if (savedFilters) {
+      const parsedFilters = JSON.parse(savedFilters);
+      setFilters(filters => ({...filters, ...parsedFilters}));
+    }
+
+    const lastQueryType = sessionStorage.getItem('clientLastQueryType');
+    if (lastQueryType === 'filter') {
+      loadDataWithFilters(); // Применяем фильтры если последний тип был фильтрация
+    } else if (lastQueryType === 'sql'){
+      executeSqlQuery(); // Выполняем SQL запрос если последний тип был SQL
+    } else {
+      fetchClients();
+    }
+  }, [currentPage, executeSqlQuery, fetchClients, loadDataWithFilters]);
+
+  // Обработчик изменений фильтров
+  const handleFilterChange = (e) => {
+    const { name, value } = e.target;
+    setFilters(prevFilters => ({ ...prevFilters, [name]: value || '' }));
+  };
+  
+  // Обработка поиска с фильтрами
+  const handleApplyFilters = (e) => {
+    e.preventDefault();
+    setCurrentPage(0);
+    sessionStorage.setItem('clientFilters', JSON.stringify(filters));
+    loadDataWithFilters();
+  };
+  
+  // Обработка исполнения запроса
+  const handleSubmitQuery = (e) => {
+    e.preventDefault();
+    sessionStorage.setItem('clientsQuery', userClientQuery);
+    executeSqlQuery();
+  };  
+
+  // Обработка смены страниц
+  const handlePageClick = (data) => {
+    setCurrentPage(data.selected);
   };
 
   return (
@@ -105,7 +141,7 @@ function Clients() {
             <input type="text" value={userClientQuery} onChange={(e) => setUserClientQuery(e.target.value)}
               placeholder="e.g., WHERE 1 = 1" className="user-query-input" />
           </div>
-          <small>You can use attributes like client_id, name, email, phone, passport_data, birth_date in your WHERE clause.</small>
+          <small>You can use attributes like id, name, email, phone, passportData, birthDate in your WHERE clause.</small>
           <button type="submit" className="execute-query-button">Execute Query</button>
         </form>
       )}
@@ -198,24 +234,37 @@ function Clients() {
         </div>
         <button type="submit" className="form-button">Search</button>
       </form>
-      {(role === "ROLE_OPERATOR" || role === "ROLE_ADMIN") && (
-        <div className="button-group">
-          <button onClick={() => setModalOpen(true)} className="add-button">Add Client</button>
-        </div>
-      )}
-      {modalOpen && <AddClientModal onClose={() => setModalOpen(false)} onClientAdded={fetchClients} />}
+      {(role === "ROLE_OPERATOR" || role === "ROLE_ADMIN") && <button onClick={() => setModalOpen(true)} className="add-button">Add Client</button>}
+      {modalOpen && <AddClientModal onClose={() => setModalOpen(false)} onClientAdded={() => setPageCount(0)} />}
       {loading && <div>Loading...</div>}
       {error && <div className="alert-danger">Error: {error}</div>}
       <div className="list-container">
-        {clients.map(client => (
-          <div key={client.id} className="item-card" onClick={() => navigate(`/clients/${client.id}`)}>
-            <p>Name: {client.name}</p>
-            <p>Email: {client.email}</p>
-            <p>Phone: {client.phone}</p>
-            <p>Birth Date: {client.birthDate && new Date(client.birthDate).toLocaleDateString()}</p>
-          </div>
-        ))}
+      {Array.isArray(clients) && clients.map(client => (
+        <div
+          key={client.id}
+          className={`item-card ${client.isBlocked ? 'blocked' : ''}`}
+          onClick={() => navigate(`/clients/${client.id}`)}
+        >
+          <p>Name: {client.name}</p>
+          <p>Email: {client.email}</p>
+          <p>Phone: {client.phone}</p>
+          <p>Birth Date: {client.birthDate && new Date(client.birthDate).toLocaleDateString()}</p>
+          <p>Credit Status: {client.creditStatus}</p>
+        </div>
+      ))}
       </div>
+      {pageCount !== 0 &&
+        <ReactPaginate
+          previousLabel={'previous'}
+          nextLabel={'next'}
+          breakLabel={'...'}
+          pageCount={pageCount}
+          onPageChange={handlePageClick}
+          containerClassName={'pagination'}
+          activeClassName={'active'}
+          forcePage={currentPage}
+        />
+      }
     </div>
   );
 }

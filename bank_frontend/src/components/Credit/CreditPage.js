@@ -213,7 +213,7 @@ function CreditPage() {
             <div className="history-content">
               <div>Amount: {payment.amount}</div>
               <div>Date: {new Date(payment.date).toLocaleDateString()}</div>
-              <div>Type: {payment.type}</div>
+              <div>Type: {payment.paymentType}</div>
               <div>Commission: {payment.commission}</div>
             </div>
           </Link>

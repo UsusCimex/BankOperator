@@ -5,13 +5,16 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
-import jakarta.persistence.Query;
+import jakarta.persistence.TypedQuery;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import ru.nsu.bankbackend.cpecification.CreditSpecification;
 import ru.nsu.bankbackend.dto.CreditDTO;
+import ru.nsu.bankbackend.dto.CreditDetailDTO;
 import ru.nsu.bankbackend.model.Client;
 import ru.nsu.bankbackend.model.Credit;
 import ru.nsu.bankbackend.model.Tariff;
@@ -19,12 +22,7 @@ import ru.nsu.bankbackend.repository.ClientRepository;
 import ru.nsu.bankbackend.repository.CreditRepository;
 import ru.nsu.bankbackend.repository.TariffRepository;
 
-import java.math.BigDecimal;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.List;
-import java.util.Optional;
-import java.util.stream.Collectors;
+import java.util.*;
 
 @Service
 public class CreditService {
@@ -39,12 +37,42 @@ public class CreditService {
     @PersistenceContext
     private EntityManager entityManager;
 
-    public List<Credit> findAll() {
-        return creditRepository.findAll();
+    private CreditDetailDTO convertToCreditDetailDTO(Credit credit) {
+        CreditDetailDTO dto = new CreditDetailDTO();
+        dto.setId(credit.getId());
+        dto.setAmount(credit.getAmount());
+        dto.setStatus(credit.getStatus().toString());
+        dto.setStartDate(credit.getStartDate());
+        dto.setEndDate(credit.getEndDate());
+        dto.setClientName(credit.getClient().getName());
+        dto.setTariffName(credit.getTariff().getName());
+        return dto;
+    }
+
+    public Credit mapToCredit(CreditDTO creditDTO) {
+        Client client = clientRepository.findById(creditDTO.getClientId())
+                .orElseThrow(() -> new RuntimeException("Client not found"));
+        Tariff tariff = tariffRepository.findById(creditDTO.getTariffId())
+                .orElseThrow(() -> new RuntimeException("Tariff not found"));
+
+        Credit credit = new Credit();
+        credit.setId(creditDTO.getId());
+        credit.setAmount(creditDTO.getAmount());
+        credit.setStartDate(creditDTO.getStartDate());
+        credit.setEndDate(calculateEndDate(creditDTO.getStartDate(), tariff.getLoanTerm()));
+        credit.setStatus(creditDTO.getStatus());
+        credit.setClient(client);
+        credit.setTariff(tariff);
+        return credit;
     }
 
     @Transactional
-    public List<Credit> findWithFilters(String clientName, String tariffName, Long amount, String status, Date startDate, Date endDate) {
+    public Page<CreditDetailDTO> findAll(PageRequest pageRequest) {
+        return creditRepository.findAll(pageRequest).map(this::convertToCreditDetailDTO);
+    }
+
+    @Transactional
+    public Page<CreditDetailDTO> findWithFilters(PageRequest pageRequest, String clientName, String tariffName, Long amount, String status, Date startDate, Date endDate) {
         Specification<Credit> spec = Specification.where(null);
 
         if (clientName != null) {
@@ -66,61 +94,54 @@ public class CreditService {
             spec = spec.and(CreditSpecification.hasEndDateBefore(endDate));
         }
 
-        return creditRepository.findAll(spec);
-    }
-
-    public Optional<Credit> findById(Long id) {
-        return creditRepository.findById(id);
-    }
-
-    public List<Credit> findByClientId(Long clientId) {
-        return creditRepository.findByClientId(clientId);
+        return creditRepository.findAll(spec, pageRequest).map(this::convertToCreditDetailDTO);
     }
 
     @Transactional
-    public Credit save(CreditDTO creditDetail) {
-        Client client = clientRepository.findById(creditDetail.getClientId())
-                .orElseThrow(() -> new RuntimeException("Client not found"));
-        Tariff tariff = tariffRepository.findById(creditDetail.getTariffId())
-                .orElseThrow(() -> new RuntimeException("Tariff not found"));
+    public Optional<CreditDetailDTO> findById(Long id) {
+        return creditRepository.findById(id).map(this::convertToCreditDetailDTO);
+    }
 
-        if (creditDetail.getAmount() > tariff.getMaxAmount()) {
-            throw new IllegalArgumentException("Requested amount exceeds the maximum allowed by the tariff");
+    @Transactional
+    public List<CreditDetailDTO> findByClientId(Long clientId) {
+        return creditRepository.findByClientId(clientId).stream().map(this::convertToCreditDetailDTO).toList();
+    }
+
+    private void checkCredit(Credit credit) {
+        if (credit.getAmount() > credit.getTariff().getMaxAmount()) {
+            throw new IllegalArgumentException("Requested amount exceeds the maximum allowed by the Tariff");
         }
 
-        Credit credit = new Credit();
-        credit.setClient(client);
-        credit.setTariff(tariff);
-        credit.setAmount(creditDetail.getAmount());
-        credit.setStatus(Credit.convertStringToStatus(creditDetail.getStatus().name()));  // Преобразование статуса
-        credit.setStartDate(creditDetail.getStartDate());
-        credit.setEndDate(calculateEndDate(creditDetail.getStartDate(), tariff.getLoanTerm()));
-        return creditRepository.save(credit);
+        List<Credit> currentCredits = creditRepository.findByClientId(credit.getClient().getId()).stream().toList();
+
+        long activeOrExpiredCount = currentCredits.stream()
+                .filter(c -> c.getStatus() == Credit.Status.ACTIVE || c.getStatus() == Credit.Status.EXPIRED)
+                .count();
+
+        if ((credit.getStatus() == Credit.Status.ACTIVE || credit.getStatus() == Credit.Status.EXPIRED) &&
+                activeOrExpiredCount >= 1) {
+            throw new IllegalStateException("Client cannot have more than one ACTIVE or EXPIRED credit.");
+        }
     }
 
     @Transactional
-    public Optional<Credit> update(Long id, CreditDTO creditDetails) {
-        return creditRepository.findById(id)
-                .map(existingCredit -> {
-                    Client client = clientRepository.findById(creditDetails.getClientId())
-                            .orElseThrow(() -> new RuntimeException("Client not found"));
-                    Tariff tariff = tariffRepository.findById(creditDetails.getTariffId())
-                            .orElseThrow(() -> new RuntimeException("Tariff not found"));
-
-                    if (creditDetails.getAmount() > tariff.getMaxAmount()) {
-                        throw new IllegalArgumentException("Requested amount exceeds the maximum allowed by the tariff");
-                    }
-
-                    existingCredit.setClient(client);
-                    existingCredit.setTariff(tariff);
-                    existingCredit.setAmount(creditDetails.getAmount());
-                    existingCredit.setStatus(Credit.convertStringToStatus(creditDetails.getStatus().name()));  // Преобразование статуса
-                    existingCredit.setStartDate(creditDetails.getStartDate());
-                    existingCredit.setEndDate(calculateEndDate(creditDetails.getStartDate(), tariff.getLoanTerm()));
-                    return creditRepository.save(existingCredit);
-                });
+    public CreditDetailDTO save(CreditDTO creditDetail) {
+        Credit credit = mapToCredit(creditDetail);
+        checkCredit(credit);
+        return convertToCreditDetailDTO(creditRepository.save(credit));
     }
 
+    @Transactional
+    public CreditDetailDTO update(Long id, CreditDTO creditDetails) throws Exception {
+        return creditRepository.findById(id)
+                .map(existingCredit -> {
+                    Credit credit = mapToCredit(creditDetails);
+                    credit.setId(id);
+                    checkCredit(credit);
+                    return convertToCreditDetailDTO(creditRepository.save(credit));
+                })
+                .orElseThrow(() -> new Exception("Credit not found"));
+    }
 
     private Date calculateEndDate(Date startDate, int loanTermMonths) {
         Calendar calendar = Calendar.getInstance();
@@ -129,36 +150,13 @@ public class CreditService {
         return calendar.getTime();
     }
 
+    @Transactional
     public void deleteById(Long id) {
         creditRepository.deleteById(id);
     }
 
-    public CreditDTO mapToCreditDTO(Credit credit) {
-        CreditDTO creditDTO = new CreditDTO();
-        creditDTO.setId(credit.getId());
-        creditDTO.setAmount(credit.getAmount());
-        creditDTO.setClientId(credit.getClient().getId());
-        creditDTO.setTariffId(credit.getTariff().getId());
-        creditDTO.setStartDate(credit.getStartDate());
-        creditDTO.setStatus(credit.getStatus());
-        creditDTO.setEndDate(credit.getEndDate());
-        return creditDTO;
-    }
-
-    public Credit mapToCredit(CreditDTO creditDTO) {
-        Credit credit = new Credit();
-        credit.setId(creditDTO.getId());
-        credit.setAmount(creditDTO.getAmount());
-        credit.setStartDate(creditDTO.getStartDate());
-        credit.setEndDate(creditDTO.getEndDate());
-        credit.setStatus(credit.getStatus());
-        credit.setClient(clientRepository.findById(creditDTO.getClientId()).orElseThrow(() -> new RuntimeException("Client not found")));
-        credit.setTariff(tariffRepository.findById(creditDTO.getTariffId()).orElseThrow(() -> new RuntimeException("Tariff not found")));
-        return credit;
-    }
-
     @Transactional
-    public List<Credit> executeCustomQuery(String queryJson) throws JsonProcessingException {
+    public List<CreditDetailDTO> executeCustomQuery(String queryJson) throws JsonProcessingException {
         ObjectMapper objectMapper = new ObjectMapper();
         JsonNode rootNode = objectMapper.readTree(queryJson);
         JsonNode queryNode = rootNode.get("query");
@@ -180,25 +178,11 @@ public class CreditService {
             throw new IllegalArgumentException("JOIN, GROUP BY и использование ';' и ',' не разрешены.");
         }
 
-        String sql = "SELECT c.credit_id, c.amount, c.end_date, c.start_date, c.status, c.client_id, c.tarif_id FROM credit c " + query.substring(query.indexOf("FROM credit") + "FROM credit".length());
+        String modifiedQuery = "SELECT c FROM Credit c " + query.substring(query.indexOf("FROM credit") + "FROM credit".length());
 
-        Query nativeQuery = entityManager.createNativeQuery(sql);
-        List<Object[]> queryResult = nativeQuery.getResultList();
+        TypedQuery<Credit> nativeQuery = entityManager.createQuery(modifiedQuery, Credit.class);
+        List<Credit> queryResult = nativeQuery.getResultList();
 
-        return queryResult.stream().map(obj -> {
-            Client client = clientRepository.findById(((Number) obj[5]).longValue())
-                    .orElseThrow(() -> new RuntimeException("Client not found"));
-            Tariff tariff = tariffRepository.findById(((Number) obj[6]).longValue())
-                    .orElseThrow(() -> new RuntimeException("Tariff not found"));
-            return new Credit(
-                    ((Number) obj[0]).longValue(),
-                    (Long) obj[1],
-                    (Date) obj[2],
-                    (Date) obj[3],
-                    Credit.convertStringToStatus((String) obj[4]),
-                    client,
-                    tariff
-            );
-        }).collect(Collectors.toList());
+        return queryResult.stream().map(this::convertToCreditDetailDTO).toList();
     }
 }

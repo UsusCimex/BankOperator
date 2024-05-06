@@ -1,18 +1,19 @@
 import api from '../authorization/AxiosApi'
 
-export const getAllTariffs = async () => {
+export const getAllTariffs = async (page) => {
   try {
-    const response = await api.get('/tariffs');
-    return response.data;
+    const response = await api.get(`/tariffs?page=${page}`);
+    return response.data || [];
   } catch (error) {
     console.error('Failed to fetch tariffs', error);
     throw new Error(error.response?.data.error || 'Failed to fetch tariffs');
   }
 };
 
-export const getTariffsWithFilters = async (filters) => {
+export const getTariffsWithFilters = async (page, filters) => {
   try {
     const params = new URLSearchParams();
+    params.append('page', page);
     Object.entries(filters).forEach(([key, value]) => {
       if (value || value === false) {
         params.append(key, value);

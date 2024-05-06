@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { executeCustomQuery, getPaymentsWithFilters } from '../../services/PaymentService';
+import ReactPaginate from 'react-paginate';
+import { executeCustomQuery, getAllPayments, getPaymentsWithFilters } from '../../services/PaymentService';
 import AddPaymentModal from './AddPaymentModal';
 import '../ListView.css';
 
@@ -16,85 +17,115 @@ function Payments() {
   const [userPaymentQuery, setUserPaymentQuery] = useState("");
   const navigate = useNavigate();
   const role = sessionStorage.getItem('role');
+  const [currentPage, setCurrentPage] = useState(parseInt(sessionStorage.getItem('paymentCurrentPage')) || 0);
+  const [pageCount, setPageCount] = useState(parseInt(sessionStorage.getItem('paymentPageCount')) || 0);
 
+  const fetchPayments = useCallback(async () => {
+    setLoading(true);
+    try {
+      const data = await getAllPayments(currentPage);
+      setPayments(data.content);
+      setPageCount(data.totalPages);
+      sessionStorage.setItem('paymentCurrentPage', data.currentPage);
+      sessionStorage.setItem('paymentPageCount', data.totalPages);
+      setError(null);
+    } catch (error) {
+      console.error("Не удалось получить платежи:", error);
+      setError(error.message);
+    } finally {
+      setLoading(false);
+    }
+  }, [currentPage]);
+
+  const loadDataWithFilters = useCallback(async () => {
+    setLoading(true);
+    try {
+      const savedFilters = sessionStorage.getItem('paymentFilters');
+      if (savedFilters) {
+          const parsedFilters = JSON.parse(savedFilters);
+          const filteredData = await getPaymentsWithFilters(currentPage, parsedFilters);
+          setPayments(filteredData.content);
+          setPageCount(filteredData.totalPages);
+          sessionStorage.setItem('paymentCurrentPage', currentPage.toString());
+          sessionStorage.setItem('paymentPageCount', pageCount.toString());
+          sessionStorage.setItem('paymentLastQueryType', 'filter');
+      }
+      setError(null);
+    } catch (error) {
+      console.error("Не удалось отфильтровать платежи:", error);
+      setError(error.message);
+    } finally {
+      setLoading(false);
+    }
+  }, [currentPage, pageCount]);
+
+  const executeSqlQuery = useCallback(async () => {
+    setLoading(true);
+    try {
+      const query = sessionStorage.getItem('paymentsQuery');
+      const fullQuery = `${baseQuery} ${query}`;
+      const data = await executeCustomQuery(fullQuery);
+      setPayments(data);
+      setPageCount(0);
+      setCurrentPage(0);
+      sessionStorage.setItem('paymentCurrentPage', '0');
+      sessionStorage.setItem('paymentPageCount', '0');
+      sessionStorage.setItem('paymentLastQueryType', 'sql');
+
+      setError(null);
+    } catch (error) {
+      console.error("Не удалось выполнить SQL запрос:", error);
+      setError(error.message);
+    } finally {
+      setLoading(false);
+    }
+  }, [baseQuery]);
+
+  // Загрузка сохраненных данных из sessionStorage при монтировании
   useEffect(() => {
-    const savedQuery = sessionStorage.getItem('userPaymentQuery');
-    const savedResults = sessionStorage.getItem('queryPaymentResults');
-    const savedFilters = sessionStorage.getItem('paymentFilters');
+    const savedQuery = sessionStorage.getItem('paymentsQuery');
     if (savedQuery) setUserPaymentQuery(savedQuery);
-    if (savedResults) setPayments(JSON.parse(savedResults));
+
+    const savedFilters = sessionStorage.getItem('paymentFilters');
     if (savedFilters) {
       const parsedFilters = JSON.parse(savedFilters);
       setFilters(filters => ({...filters, ...parsedFilters}));
     }
-  }, []);
 
-  const fetchPayments = async () => {
-    setLoading(true);
-    try {
-      const data = await getPaymentsWithFilters(filters);
-      const formattedData = data.map(item => ({
-        id: item.id,
-        clientName: item.credit.client.name,
-        amount: item.amount,
-        paymentDate: item.paymentDate,
-        paymentType: item.paymentType,
-        commission: item.commission
-      }));
-      setPayments(formattedData);
-      sessionStorage.setItem('queryPaymentResults', JSON.stringify(formattedData));
-      setError(null);
-    } catch (error) {
-      console.error("Failed to fetch payment details:", error);
-      setError(error.message);
-    } finally {
-      setLoading(false);
+    const lastQueryType = sessionStorage.getItem('paymentLastQueryType');
+    if (lastQueryType === 'filter') {
+      loadDataWithFilters(); // Применяем фильтры если последний тип был фильтрация
+    } else if (lastQueryType === 'sql'){
+      executeSqlQuery(); // Выполняем SQL запрос если последний тип был SQL
+    } else {
+      fetchPayments();
     }
-  };
+  }, [currentPage, executeSqlQuery, fetchPayments, loadDataWithFilters]);
 
+  // Обработчик изменений фильтров
   const handleFilterChange = (e) => {
     const { name, value } = e.target;
-    setFilters(prevFilters => ({ ...prevFilters, [name]: value }));
+    setFilters(prevFilters => ({ ...prevFilters, [name]: value || '' }));
   };
-
-  const handleApplyFilters = async (e) => {
+  
+  // Обработка поиска с фильтрами
+  const handleApplyFilters = (e) => {
     e.preventDefault();
-    fetchPayments();
+    setCurrentPage(0);
+    sessionStorage.setItem('paymentFilters', JSON.stringify(filters));
+    loadDataWithFilters();
   };
-
-  const handleSubmitQuery = async (e) => {
+  
+  // Обработка исполнения запроса
+  const handleSubmitQuery = (e) => {
     e.preventDefault();
-    setLoading(true);
-    try {
-      const fullQuery = `${baseQuery} ${userPaymentQuery}`;
-      const data = await executeCustomQuery(fullQuery);
-      const formattedData = data.map(item => ({
-        id: item.id,
-        clientName: item.credit.client.name,
-        amount: item.amount,
-        paymentDate: item.paymentDate,
-        paymentType: item.paymentType,
-        commission: item.commission
-      }));
-      setPayments(formattedData);
-      sessionStorage.setItem('queryPaymentResults', JSON.stringify(formattedData));
-      sessionStorage.setItem('userPaymentQuery', userPaymentQuery);
-      setError(null);
-    } catch (error) {
-      console.error("Failed to execute SQL query:", error);
-      setError(error.message);
-    } finally {
-      setLoading(false);
-    }
-  };
+    sessionStorage.setItem('paymentsQuery', userPaymentQuery);
+    executeSqlQuery();
+  };  
 
-  const handlePaymentClick = (paymentId) => {
-    if (role === "ROLE_OPERATOR" || role === "ROLE_ADMIN")
-      navigate(`/payments/${paymentId}`);
-  };
-
-  const handlePaymentAdded = () => {
-    fetchPayments();
+  // Обработка смены страниц
+  const handlePageClick = (data) => {
+    setCurrentPage(data.selected);
   };
 
   return (
@@ -117,7 +148,7 @@ function Payments() {
             className="user-query-input form-input"
           />
         </div>
-        <small>You can use attributes like payment_id, credit_id, amount, payment_date, payment_type, commission in your WHERE clause.</small>
+        <small>You can use attributes like id, credit, amount, paymentDate, paymentType, commission in your WHERE clause.</small>
         <button type="submit" className="execute-query-button">Execute Query</button>
       </form>
       )}
@@ -150,7 +181,7 @@ function Payments() {
           <div className="form-input-group">
             <label htmlFor="paymentDate">Payment Date</label>
             <input
-              type="date"
+              type="datetime-local"
               id="paymentDate"
               name="paymentDate"
               value={filters.paymentDate}
@@ -174,13 +205,18 @@ function Payments() {
         <button type="submit" className="form-button">Search</button>
       </form>
       {(role === "ROLE_OPERATOR" || role === "ROLE_ADMIN") && <button onClick={() => setModalOpen(true)} className="add-button">Add Payment</button>}
-      {modalOpen && <AddPaymentModal onClose={() => setModalOpen(false)} onPaymentAdded={handlePaymentAdded} />}
+      {modalOpen && <AddPaymentModal onClose={() => setModalOpen(false)} onPaymentAdded={() => setPageCount(0)} />}
       {loading && <div>Loading...</div>}
       {error && <div className="alert-danger">Error: {error}</div>}
       <div className="list-container">
-        {payments.map(payment => (
-          <div key={payment.id} className="item-card" onClick={() => handlePaymentClick(payment.id)}>
+        {Array.isArray(payments) && payments.map(payment => (
+          <div 
+            key={payment.id} 
+            className="item-card" 
+            onClick={() => navigate(`/payments/${payment.id}`)}
+          >
             <p>Client: {payment.clientName}</p>
+            <p>Tariff: {payment.tariffName}</p>
             <p>Amount: {payment.amount}</p>
             <p>Payment Date: {payment.paymentDate}</p>
             <p>Payment Type: {payment.paymentType}</p>
@@ -188,6 +224,18 @@ function Payments() {
           </div>
         ))}
       </div>
+      {pageCount !== 0 &&
+        <ReactPaginate
+          previousLabel={'previous'}
+          nextLabel={'next'}
+          breakLabel={'...'}
+          pageCount={pageCount}
+          onPageChange={handlePageClick}
+          containerClassName={'pagination'}
+          activeClassName={'active'}
+          forcePage={currentPage}
+        />
+      }
     </div>
   );
 }

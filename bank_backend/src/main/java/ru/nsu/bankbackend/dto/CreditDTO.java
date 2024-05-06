@@ -13,5 +13,4 @@ public class CreditDTO {
     private Long amount; // Сумма кредита
     private Credit.Status status;
     private Date startDate;
-    private Date endDate;
 }

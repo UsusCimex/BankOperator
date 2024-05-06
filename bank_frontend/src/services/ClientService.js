@@ -1,11 +1,32 @@
 import api from '../authorization/AxiosApi';
 
-export const getAllClients = async () => {
+export const getAllClients = async (page) => {
   try {
-    const response = await api.get('/clients');
+    const response = await api.get(`/clients?page=${page}`);
     return response.data || [];
   } catch (error) {
     throw new Error('Failed to fetch clients', error);
+  }
+};
+
+export const getClientsWithFilters = async (page, filters) => {
+  try {
+    const params = new URLSearchParams();
+    params.append('page', page);
+    Object.entries(filters).forEach(([key, value]) => {
+      if (value || value === false) {
+        if (key === 'birthDate' && value) {
+          params.append(key, new Date(value).toISOString().split('T')[0]);
+        } else if (key !== 'birthDate') {
+          params.append(key, value);
+        }
+      }
+    });
+    
+    const response = await api.get(`/clients?${params}`);
+    return response.data || [];
+  } catch (error) {
+    throw new Error('Failed to fetch clients with filters', error);
   }
 };
 
@@ -17,6 +38,24 @@ export const getClientById = async (id) => {
     throw new Error(`Failed to fetch client with id ${id}`, error);
   }
 };
+
+export const blockClient = async (id, endDate) => {
+  try {
+    const response = await api.post(`/clients/${id}/block?endDate=${endDate}`);
+    return response.data;
+  } catch (error) {
+    throw new Error(`Failed to block client with id ${id}`, error);
+  }
+}
+
+export const unblockClient = async (id) => {
+  try {
+    const response = await api.post(`/clients/${id}/unblock`);
+    return response.data;
+  } catch (error) {
+    throw new Error(`Failed to unblock client with id ${id}`, error);
+  }
+}
 
 export const createClient = async (client) => {
   try {
@@ -51,25 +90,5 @@ export const executeCustomQuery = async (query) => {
     return response.data || [];
   } catch (error) {
     throw new Error('Failed to execute custom query', error);
-  }
-};
-
-export const getClientsWithFilters = async (filters) => {
-  try {
-    const params = new URLSearchParams();
-    Object.entries(filters).forEach(([key, value]) => {
-      if (value || value === false) {
-        if (key === 'birthDate' && value) {
-          params.append(key, new Date(value).toISOString().split('T')[0]);
-        } else if (key !== 'birthDate') {
-          params.append(key, value);
-        }
-      }
-    });
-
-    const response = await api.get(`/clients?${params}`);
-    return response.data || [];
-  } catch (error) {
-    throw new Error('Failed to fetch clients with filters', error);
   }
 };

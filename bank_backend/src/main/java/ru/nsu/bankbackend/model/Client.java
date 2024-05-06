@@ -1,15 +1,19 @@
 package ru.nsu.bankbackend.model;
 
-import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonIdentityInfo;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
+import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
 import lombok.Data;
 
 import java.util.Date;
+import java.util.List;
 
 @Data
 @Entity
+@JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "id")
 public class Client {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -41,13 +45,11 @@ public class Client {
     @Column(name = "birth_date")
     private Date birthDate;
 
-    @OneToOne(mappedBy = "client")
-    @JsonBackReference("client-blockage")
+    @OneToOne(mappedBy = "client", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     private Blockage blockage;
 
-    @OneToOne(mappedBy = "client")
-    @JsonBackReference("client-credit")
-    private Credit credit;
+    @OneToMany(mappedBy = "client", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+    private List<Credit> credits;
 
     public Client() {}
 

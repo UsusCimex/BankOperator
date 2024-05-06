@@ -1,5 +1,7 @@
 package ru.nsu.bankbackend.model;
 
+import com.fasterxml.jackson.annotation.JsonIdentityInfo;
+import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
@@ -8,6 +10,7 @@ import lombok.Data;
 
 @Data
 @Entity
+@JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "id")
 public class Tariff {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

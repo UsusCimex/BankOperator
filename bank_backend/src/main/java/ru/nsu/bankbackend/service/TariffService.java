@@ -6,8 +6,11 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import jakarta.persistence.Query;
+import jakarta.persistence.TypedQuery;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import ru.nsu.bankbackend.cpecification.PaymentSpecification;
@@ -29,12 +32,13 @@ public class TariffService {
     @PersistenceContext
     private EntityManager entityManager;
 
-    public List<Tariff> findAll() {
-        return tariffRepository.findAll();
+    @Transactional
+    public Page<Tariff> findAll(PageRequest pageRequest) {
+        return tariffRepository.findAll(pageRequest);
     }
 
     @Transactional
-    public List<Tariff> findWithFilters(String name, Long loanTerm, Long interestRate, Long maxAmount) {
+    public Page<Tariff> findWithFilters(PageRequest pageRequest, String name, Long loanTerm, Long interestRate, Long maxAmount) {
         Specification<Tariff> spec = Specification.where(null);
 
         if (name != null) {
@@ -50,7 +54,7 @@ public class TariffService {
             spec = spec.and(TariffSpecification.hasMaxAmountEqualTo(maxAmount));
         }
 
-        return tariffRepository.findAll(spec);
+        return tariffRepository.findAll(spec, pageRequest);
     }
 
     public Optional<Tariff> findById(Long id) {
@@ -100,17 +104,11 @@ public class TariffService {
             throw new IllegalArgumentException("JOIN, GROUP BY и использование ';' и ',' не разрешены.");
         }
 
-        String sql = "SELECT t.tariff_id, t.interest_rate, t.loan_term, t.max_amount, t.name FROM tariff t " + query.substring(query.indexOf("FROM tariff") + "FROM tariff".length());
+        String modifiedQuery = "SELECT t FROM Tariff t " + query.substring(query.indexOf("FROM tariff") + "FROM tariff".length());
 
-        Query nativeQuery = entityManager.createNativeQuery(sql);
-        List<Object[]> queryResult = nativeQuery.getResultList();
+        TypedQuery<Tariff> nativeQuery = entityManager.createQuery(modifiedQuery, Tariff.class);
+        List<Tariff> queryResult = nativeQuery.getResultList();
 
-        return queryResult.stream().map(obj -> new Tariff(
-                ((Number) obj[0]).longValue(),
-                (Double) obj[1],
-                (Integer) obj[2],
-                (Long) obj[3],
-                (String) obj[4]
-        )).collect(Collectors.toList());
+        return queryResult;
     }
 }

@@ -6,12 +6,16 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import jakarta.persistence.Query;
+import jakarta.persistence.TypedQuery;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import ru.nsu.bankbackend.cpecification.PaymentSpecification;
 import ru.nsu.bankbackend.dto.PaymentDTO;
+import ru.nsu.bankbackend.dto.PaymentDetailDTO;
 import ru.nsu.bankbackend.model.Credit;
 import ru.nsu.bankbackend.model.Payment;
 import ru.nsu.bankbackend.repository.CreditRepository;
@@ -24,7 +28,6 @@ import java.util.stream.Collectors;
 
 @Service
 public class PaymentService {
-
     @Autowired
     private PaymentRepository paymentRepository;
     @PersistenceContext
@@ -32,19 +35,55 @@ public class PaymentService {
     @Autowired
     private CreditRepository creditRepository;
 
-    public List<Payment> findAll() {
-        return paymentRepository.findAll();
+    private PaymentDetailDTO convertToDTO(Payment payment) {
+        PaymentDetailDTO dto = new PaymentDetailDTO();
+        dto.setId(payment.getId());
+        dto.setAmount(payment.getAmount());
+        dto.setPaymentDate(payment.getPaymentDate());
+        dto.setCommission(payment.getCommission());
+        dto.setPaymentType(payment.getPaymentType());
+        dto.setClientName(payment.getCredit().getClient().getName());
+        dto.setTariffName(payment.getCredit().getTariff().getName());
+        return dto;
     }
 
-    public List<Payment> findByCreditId(Long creditId) {
-        return paymentRepository.findByCreditId(creditId);
+    @Transactional
+    public Page<PaymentDetailDTO> findAll(PageRequest pageRequest) {
+        return paymentRepository.findAll(pageRequest).map(this::convertToDTO);
     }
 
-    public Optional<Payment> findById(Long id) {
-        return paymentRepository.findById(id);
+    @Transactional
+    public Page<PaymentDetailDTO> findWithFilters(PageRequest pageRequest, String clientName, Long amount, Date paymentDate, Long commission) {
+        Specification<Payment> spec = Specification.where(null);
+
+        if (clientName != null) {
+            spec = spec.and(PaymentSpecification.hasClientNameLike(clientName));
+        }
+        if (amount != null) {
+            spec = spec.and(PaymentSpecification.hasAmountEqualTo(amount));
+        }
+        if (paymentDate != null) {
+            spec = spec.and(PaymentSpecification.hasPaymentDateOn(paymentDate));
+        }
+        if (commission != null) {
+            spec = spec.and(PaymentSpecification.hasCommissionEqualTo(commission));
+        }
+
+        return paymentRepository.findAll(spec, pageRequest).map(this::convertToDTO);
     }
 
-    public Payment save(PaymentDTO paymentDetail) {
+    @Transactional
+    public List<PaymentDetailDTO> findByCreditId(Long creditId) {
+        return paymentRepository.findByCreditId(creditId).stream().map(this::convertToDTO).toList();
+    }
+
+    @Transactional
+    public Optional<PaymentDetailDTO> findById(Long id) {
+        return paymentRepository.findById(id).map(this::convertToDTO);
+    }
+
+    @Transactional
+    public PaymentDetailDTO save(PaymentDTO paymentDetail) {
         Credit credit = creditRepository.findById(paymentDetail.getCreditId())
                 .orElseThrow(() -> new RuntimeException("Credit not found"));
 
@@ -54,14 +93,16 @@ public class PaymentService {
         payment.setAmount(paymentDetail.getAmount());
         payment.setPaymentType(paymentDetail.getPaymentType());
         payment.setCommission(paymentDetail.getCommission());
-        return paymentRepository.save(payment);
+        return convertToDTO(paymentRepository.save(payment));
     }
 
+    @Transactional
     public void deleteById(Long id) {
         paymentRepository.deleteById(id);
     }
 
-    public Payment update(Long id, PaymentDTO paymentDetails) throws Exception {
+    @Transactional
+    public PaymentDetailDTO update(Long id, PaymentDTO paymentDetails) throws Exception {
         return paymentRepository.findById(id)
                 .map(existingPayment -> {
                     Credit credit = creditRepository.findById(paymentDetails.getCreditId())
@@ -72,9 +113,9 @@ public class PaymentService {
                     existingPayment.setCommission(paymentDetails.getCommission());
                     existingPayment.setAmount(paymentDetails.getAmount());
                     existingPayment.setCredit(credit);
-                    return paymentRepository.save(existingPayment);
+                    return convertToDTO(paymentRepository.save(existingPayment));
                 })
-                .orElseThrow(() -> new Exception("Клиент не найден."));
+                .orElseThrow(() -> new Exception("Платёж не найден."));
     }
 
     public Payment mapToPayment(PaymentDTO paymentDTO) {
@@ -98,27 +139,7 @@ public class PaymentService {
     }
 
     @Transactional
-    public List<Payment> findWithFilters(String clientName, Long amount, Date paymentDate, Long commission) {
-        Specification<Payment> spec = Specification.where(null);
-
-        if (clientName != null) {
-            spec = spec.and(PaymentSpecification.hasClientNameLike(clientName));
-        }
-        if (amount != null) {
-            spec = spec.and(PaymentSpecification.hasAmountEqualTo(amount));
-        }
-        if (paymentDate != null) {
-            spec = spec.and(PaymentSpecification.hasPaymentDateOn(paymentDate));
-        }
-        if (commission != null) {
-            spec = spec.and(PaymentSpecification.hasCommissionEqualTo(commission));
-        }
-
-        return paymentRepository.findAll(spec);
-    }
-
-    @Transactional
-    public List<Payment> executeCustomQuery(String queryJson) throws JsonProcessingException {
+    public List<PaymentDetailDTO> executeCustomQuery(String queryJson) throws JsonProcessingException {
         ObjectMapper objectMapper = new ObjectMapper();
         JsonNode rootNode = objectMapper.readTree(queryJson);
         JsonNode queryNode = rootNode.get("query");
@@ -140,22 +161,11 @@ public class PaymentService {
             throw new IllegalArgumentException("JOIN, GROUP BY и использование ';' и ',' не разрешены.");
         }
 
-        String sql = "SELECT p.payment_id, p.amount, p.commission, p.payment_date, p.payment_type, p.credit_id FROM payment p " + query.substring(query.indexOf("FROM payment") + "FROM payment".length());
+        String modifiedQuery = "SELECT p FROM Payment p " + query.substring(query.indexOf("FROM payment") + "FROM payment".length());
 
-        Query nativeQuery = entityManager.createNativeQuery(sql);
-        List<Object[]> queryResult = nativeQuery.getResultList();
+        TypedQuery<Payment> nativeQuery = entityManager.createQuery(modifiedQuery, Payment.class);
+        List<Payment> queryResult = nativeQuery.getResultList();
 
-        return queryResult.stream().map(obj -> {
-            Credit credit = creditRepository.findById(((Number) obj[5]).longValue())
-                    .orElseThrow(() -> new RuntimeException("Credit not found"));
-            return new Payment(
-                    ((Number) obj[0]).longValue(),
-                    (Long) obj[1],
-                    (Long) obj[2],
-                    (Date) obj[3],
-                    (String) obj[4],
-                    credit
-            );
-        }).collect(Collectors.toList());
+        return queryResult.stream().map(this::convertToDTO).toList();
     }
 }

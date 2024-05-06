@@ -4,36 +4,71 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
-import jakarta.persistence.Query;
+import jakarta.persistence.TypedQuery;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import ru.nsu.bankbackend.cpecification.ClientSpecification;
+import ru.nsu.bankbackend.dto.ClientDetailDTO;
+import ru.nsu.bankbackend.model.Blockage;
 import ru.nsu.bankbackend.model.Client;
 import ru.nsu.bankbackend.model.Credit;
+import ru.nsu.bankbackend.repository.BlockageRepository;
 import ru.nsu.bankbackend.repository.ClientRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.lang.reflect.InvocationTargetException;
-import java.util.Date;
-import java.util.List;
-import java.util.Optional;
-import java.util.stream.Collectors;
+import java.util.*;
 
 @Service
 public class ClientService {
     @Autowired
     private ClientRepository clientRepository;
+    @Autowired
+    private BlockageRepository blockageRepository;
     @PersistenceContext
     private EntityManager entityManager;
 
-    public List<Client> findAll() {
-        return clientRepository.findAll();
+    private ClientDetailDTO convertToDTO(Client client) {
+        ClientDetailDTO dto = new ClientDetailDTO();
+        dto.setId(client.getId());
+        dto.setName(client.getName());
+        dto.setEmail(client.getEmail());
+        dto.setPhone(client.getPhone());
+        dto.setPassportData(client.getPassportData());
+        dto.setBirthDate(client.getBirthDate());
+
+        // Проверка и установка статуса блокировки
+        if (client.getBlockage() != null && client.getBlockage().getEndDate().after(new Date())) {
+            dto.setIsBlocked(true);
+            dto.setBlockEndDate(client.getBlockage().getEndDate());
+        } else {
+            dto.setIsBlocked(false);
+        }
+
+        if (client.getCredits() != null && !client.getCredits().isEmpty()) {
+            Credit latestCredit = client.getCredits().stream()
+                    .max(Comparator.comparing(Credit::getStartDate))
+                    .orElse(null);
+
+            dto.setCreditStatus(latestCredit.getStatus().toString());
+        } else {
+            dto.setCreditStatus("N/A");
+        }
+
+        return dto;
     }
 
     @Transactional
-    public List<Client> findWithFilters(String name, String email, String phone, String passport, Date birthDate, String creditStatus, Boolean hasCredit, Boolean hasBlock) {
+    public Page<ClientDetailDTO> findAll(PageRequest pageRequest) {
+        return clientRepository.findAll(pageRequest).map(this::convertToDTO);
+    }
+
+    @Transactional
+    public Page<ClientDetailDTO> findWithFilters(PageRequest pageRequest, String name, String email, String phone, String passport, Date birthDate, String creditStatus, Boolean hasCredit, Boolean hasBlock) {
         Specification<Client> spec = Specification.where(null);
 
         if (name != null) {
@@ -60,18 +95,43 @@ public class ClientService {
         if (hasBlock != null) {
             spec = spec.and(ClientSpecification.hasBlock(hasBlock));
         }
-
-        return clientRepository.findAll(spec);
+        return clientRepository.findAll(spec, pageRequest).map(this::convertToDTO);
     }
 
-    public Optional<Client> findById(Long id) {
-        return clientRepository.findById(id);
+    @Transactional
+    public Optional<ClientDetailDTO> findById(Long id) {
+        return clientRepository.findById(id).map(this::convertToDTO);
     }
 
-    public Client save(Client client) {
-        return clientRepository.save(client);
+    @Transactional
+    public ClientDetailDTO blockClient(Long clientId, Date endDate) {
+        Client client = clientRepository.findById(clientId).orElseThrow(() -> new RuntimeException("Client not found"));
+        Blockage blockage = new Blockage();
+        blockage.setClient(client);
+        blockage.setStartDate(new Date());
+        blockage.setEndDate(endDate);
+        client.setBlockage(blockage);
+        return convertToDTO(clientRepository.save(client));
     }
 
+    @Transactional
+    public ClientDetailDTO unblockClient(Long clientId) {
+        Client client = clientRepository.findById(clientId).orElseThrow(() -> new RuntimeException("Client not found"));
+        if (client.getBlockage() != null) {
+            Long blockageId = client.getBlockage().getId();
+            client.setBlockage(null);
+            clientRepository.save(client);
+            blockageRepository.deleteById(blockageId);
+        }
+        return convertToDTO(client);
+    }
+
+    @Transactional
+    public ClientDetailDTO save(Client client) {
+        return convertToDTO(clientRepository.save(client));
+    }
+
+    @Transactional
     public void deleteById(Long id) throws Exception {
         clientRepository.findById(id)
                 .map(client -> {
@@ -81,7 +141,8 @@ public class ClientService {
                 .orElseThrow(() -> new Exception("Клиент не найден."));
     }
 
-    public Client update(Long id, Client clientDetail) throws Exception {
+    @Transactional
+    public ClientDetailDTO update(Long id, Client clientDetail) throws Exception {
         return clientRepository.findById(id)
                 .map(existingClient -> {
                     existingClient.setBirthDate(clientDetail.getBirthDate());
@@ -89,14 +150,14 @@ public class ClientService {
                     existingClient.setEmail(clientDetail.getEmail());
                     existingClient.setPhone(clientDetail.getPhone());
                     existingClient.setPassportData(clientDetail.getPassportData());
-                    return clientRepository.save(existingClient);
+                    return convertToDTO(clientRepository.save(existingClient));
                 })
                 .orElseThrow(() -> new Exception("Клиент не найден."));
     }
 
     // Весьма опасненько...
     @Transactional
-    public List<Client> executeCustomQuery(String queryJson) throws JsonProcessingException, NoSuchMethodException, InvocationTargetException, InstantiationException, IllegalAccessException {
+    public List<ClientDetailDTO> executeCustomQuery(String queryJson) throws JsonProcessingException, NoSuchMethodException, InvocationTargetException, InstantiationException, IllegalAccessException {
         ObjectMapper objectMapper = new ObjectMapper();
         JsonNode rootNode = objectMapper.readTree(queryJson);
         JsonNode queryNode = rootNode.get("query");
@@ -118,20 +179,11 @@ public class ClientService {
             throw new IllegalArgumentException("JOIN, GROUP BY и использование ';' и ',' не разрешены.");
         }
 
-        String modifiedQuery = "SELECT c.client_id, c.name, c.email, c.phone, c.passport_data, c.birth_date FROM client c " + query.substring(query.indexOf("FROM client") + "FROM client".length());
+        String modifiedQuery = "SELECT c FROM Client c " + query.substring(query.indexOf("FROM client") + "FROM client".length());
 
-        Query nativeQuery = entityManager.createNativeQuery(modifiedQuery);
-        List<Object[]> queryResult = nativeQuery.getResultList();
+        TypedQuery<Client> nativeQuery = entityManager.createQuery(modifiedQuery, Client.class);
+        List<Client> queryResult = nativeQuery.getResultList();
 
-        return queryResult.stream().map(obj ->
-            new Client(
-                    ((Number) obj[0]).longValue(), // ID
-                    (String) obj[1],               // name
-                    (String) obj[2],               // email
-                    (String) obj[3],               // phone
-                    (String) obj[4],               // passport_data
-                    (Date) obj[5]                  // birth_date
-            )
-        ).collect(Collectors.toList());
+        return queryResult.stream().map(this::convertToDTO).toList();
     }
 }

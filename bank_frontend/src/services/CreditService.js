@@ -1,8 +1,8 @@
 import api from '../authorization/AxiosApi'
 
-export const getAllCredits = async () => {
+export const getAllCredits = async (page) => {
   try {
-    const response = await api.get('/credits');
+    const response = await api.get(`/credits?page=${page}`);
     return response.data || [];
   } catch (error) {
     console.error('Error fetching credits:', error);
@@ -10,9 +10,10 @@ export const getAllCredits = async () => {
   }
 };
 
-export const getCreditsWithFilters = async (filters) => {
+export const getCreditsWithFilters = async (page, filters) => {
   try {
     const params = new URLSearchParams();
+    params.append('page', page);
     Object.entries(filters).forEach(([key, value]) => {
       if (value || value === false) {
         if ((key === 'startDate' || key === 'endDate') && value) {
@@ -43,7 +44,7 @@ export const getClientCredits = async (clientId) => {
 export const getCreditById = async (id) => {
   try {
     const response = await api.get(`/credits/${id}`);
-    return response.data;
+    return response.data || [];
   } catch (error) {
     console.error(`Failed to fetch credit with id ${id}`, error);
     throw error;

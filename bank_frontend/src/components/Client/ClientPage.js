@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { getClientById, updateClient, deleteClient } from '../../services/ClientService';
+import { getClientById, updateClient, deleteClient, blockClient, unblockClient } from '../../services/ClientService';
 import { getClientCredits } from '../../services/CreditService';
 import { AddCreditModal } from '../Credit/AddCreditModal';
 import '../DetailEdit.css';
@@ -11,7 +11,7 @@ function ClientPage() {
   const { clientId } = useParams(); // Получение ID клиента из URL
   const navigate = useNavigate();
   const [client, setClient] = useState({
-    name: '', email: '', phone: '', passportData: '', birthDate: ''
+    name: '', email: '', phone: '', passportData: '', birthDate: '', isBlocked: false, blockUntil: ''
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -101,6 +101,36 @@ function ClientPage() {
     setClient(prevState => ({ ...prevState, [name]: value }));
   };
 
+  // Обработка блокировки клиента
+  const handleBlock = async () => {
+    setLoading(true);
+    try {
+      await blockClient(clientId, client.blockUntil);
+      setClient(prevState => ({ ...prevState, isBlocked: true }));
+      alert('Client blocked until ' + client.blockUntil);
+    } catch (error) {
+      console.error("Block error:", error);
+      setError(`Failed to block client\nError: ${error.message}`);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Обработка разблокировки клиента
+  const handleUnblock = async () => {
+    setLoading(true);
+    try {
+      await unblockClient(clientId);
+      setClient(prevState => ({ ...prevState, isBlocked: false, blockUntil: '' }));
+      alert('Client unblocked');
+    } catch (error) {
+      console.error("Unblock error:", error);
+      setError(`Failed to unblock client\nError: ${error.message}`);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // Сброс ошибок
   const dismissError = () => {
     setError(null);
@@ -131,13 +161,27 @@ function ClientPage() {
         <label htmlFor="passportData" className="label">Passport Data:</label>
         <input className="input" id="passportData" name="passportData" value={client.passportData || ''} onChange={handleChange} placeholder="Passport Data" />
         <label htmlFor="birthDate" className="label">Birth Date:</label>
-        <input className="input" id="birthDate" type="date" name="birthDate" value={client.birthDate || ''} onChange={handleChange} />
+        <input className="input" id="birthDate" type="date" name="birthDate" value={client.birthDate.split('T')[0] || ''} onChange={handleChange} />
       </div>
       <div className="buttons">
         <button className="button" onClick={handleUpdate}>Save Changes</button>
         <button className="button" onClick={handleDelete}>Delete User</button>
         <button className="button" onClick={handleAddCredit}>Add Credit</button>
       </div>
+      <div className="buttons blockage-div">
+        {client.isBlocked ? (
+          <>
+            <input type="datetime-local" name="blockUntil" value={client.blockEndDate.slice(0, 16)} onChange={handleChange} disabled className="input-date-blockage" />
+            <button className="blockage-button" onClick={handleUnblock}>Unblock Client</button>
+          </>
+        ) : (
+          <>
+            <input type="datetime-local" name="blockUntil" value={client.blockEndDate?.slice(0, 16)} onChange={handleChange} className="input-date-blockage" />
+            <button className="blockage-button" onClick={handleBlock}>Block until date</button>
+          </>
+        )}
+      </div>
+
       {isModalOpen && <AddCreditModal onClose={handleCloseModal} onCreditAdded={refreshCredits} currentClient={{ value: client.id, label: client.name }}/>}
       <h3>Credit History</h3>
       <div className="history">

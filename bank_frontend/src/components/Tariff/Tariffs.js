@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { executeCustomQuery, getTariffsWithFilters } from '../../services/TariffService';
+import ReactPaginate from 'react-paginate';
+import { getAllTariffs, executeCustomQuery, getTariffsWithFilters } from '../../services/TariffService';
 import AddTariffModal from './AddTariffModal';
 import '../ListView.css';
 
@@ -16,75 +17,122 @@ function Tariffs() {
   const [userTariffQuery, setUserTariffQuery] = useState("");
   const navigate = useNavigate();
   const role = sessionStorage.getItem('role');
+  const [currentPage, setCurrentPage] = useState(parseInt(sessionStorage.getItem('tariffCurrentPage')) || 0);
+  const [pageCount, setPageCount] = useState(parseInt(sessionStorage.getItem('tariffPageCount')) || 0);
 
+  const fetchTariffs = useCallback(async () => {
+    setLoading(true);
+    try {
+      const data = await getAllTariffs(currentPage);
+      setTariffs(data.content);
+      setPageCount(data.totalPages);
+      sessionStorage.setItem('tariffCurrentPage', data.currentPage);
+      sessionStorage.setItem('tariffPageCount', data.totalPages);
+      setError(null);
+    } catch (error) {
+      console.error("Не удалось получить тарифы:", error);
+      setError(error.message);
+    } finally {
+      setLoading(false);
+    }
+  }, [currentPage]);
+
+  const loadDataWithFilters = useCallback(async () => {
+    setLoading(true);
+    try {
+      const savedFilters = sessionStorage.getItem('tariffFilters');
+      if (savedFilters) {
+          const parsedFilters = JSON.parse(savedFilters);
+          const filteredData = await getTariffsWithFilters(currentPage, parsedFilters);
+          setTariffs(filteredData.content);
+          setPageCount(filteredData.totalPages);
+          sessionStorage.setItem('tariffCurrentPage', currentPage.toString());
+          sessionStorage.setItem('tariffPageCount', pageCount.toString());
+          sessionStorage.setItem('tariffLastQueryType', 'filter');
+      }
+      setError(null);
+    } catch (error) {
+      console.error("Не удалось отфильтровать тарифы:", error);
+      setError(error.message);
+    } finally {
+      setLoading(false);
+    }
+  }, [currentPage, pageCount]);
+
+  const executeSqlQuery = useCallback(async () => {
+    setLoading(true);
+    try {
+      const query = sessionStorage.getItem('tariffsQuery');
+      const fullQuery = `${baseQuery} ${query}`;
+      const data = await executeCustomQuery(fullQuery);
+      setTariffs(data);
+      setPageCount(0);
+      setCurrentPage(0);
+      sessionStorage.setItem('tariffCurrentPage', '0');
+      sessionStorage.setItem('tariffPageCount', '0');
+      sessionStorage.setItem('tariffLastQueryType', 'sql');
+
+      setError(null);
+    } catch (error) {
+      console.error("Не удалось выполнить SQL запрос:", error);
+      setError(error.message);
+    } finally {
+      setLoading(false);
+    }
+  }, [baseQuery]);
+
+  // Загрузка сохраненных данных из sessionStorage при монтировании
   useEffect(() => {
-    const savedQuery = sessionStorage.getItem('userTariffQuery');
-    const savedResults = sessionStorage.getItem('queryTariffResults');
-    const savedFilters = sessionStorage.getItem('tariffFilters');
+    const savedQuery = sessionStorage.getItem('tariffsQuery');
     if (savedQuery) setUserTariffQuery(savedQuery);
-    if (savedResults) setTariffs(JSON.parse(savedResults));
+
+    const savedFilters = sessionStorage.getItem('tariffFilters');
     if (savedFilters) {
       const parsedFilters = JSON.parse(savedFilters);
       setFilters(filters => ({...filters, ...parsedFilters}));
     }
-  }, []);
 
-  const fetchTariffs = async () => {
-    setLoading(true);
-    try {
-      const data = await getTariffsWithFilters(filters);
-      setTariffs(data);
-      sessionStorage.setItem('queryTariffResults', JSON.stringify(data));
-      setError(null);
-    } catch (error) {
-      console.error("Failed to fetch tariff details:", error);
-      setError(error.message);
-    } finally {
-      setLoading(false);
+    const lastQueryType = sessionStorage.getItem('tariffLastQueryType');
+    if (lastQueryType === 'filter') {
+      loadDataWithFilters(); // Применяем фильтры если последний тип был фильтрация
+    } else if (lastQueryType === 'sql'){
+      executeSqlQuery(); // Выполняем SQL запрос если последний тип был SQL
+    } else {
+      fetchTariffs();
     }
-  };
+  }, [currentPage, executeSqlQuery, fetchTariffs, loadDataWithFilters]);
 
+  // Обработчик изменений фильтров
   const handleFilterChange = (e) => {
     const { name, value } = e.target;
-    setFilters(prevFilters => ({ ...prevFilters, [name]: value }));
+    setFilters(prevFilters => ({ ...prevFilters, [name]: value || '' }));
   };
-
-  const handleApplyFilters = async (e) => {
+  
+  // Обработка поиска с фильтрами
+  const handleApplyFilters = (e) => {
     e.preventDefault();
-    fetchTariffs();
+    setCurrentPage(0);
+    sessionStorage.setItem('tariffFilters', JSON.stringify(filters));
+    loadDataWithFilters();
   };
-
-  const handleExecuteQuery = async (e) => {
+  
+  // Обработка исполнения запроса
+  const handleSubmitQuery = (e) => {
     e.preventDefault();
-    setLoading(true);
-    try {
-      const data = await executeCustomQuery(`${baseQuery} ${userTariffQuery}`);
-      setTariffs(data || []);
-      sessionStorage.setItem('queryTariffResults', JSON.stringify(data || []));
-      sessionStorage.setItem('userTariffQuery', userTariffQuery);
-      setError(null);
-    } catch (error) {
-      console.error("Failed to execute SQL query:", error);
-      setError(error.message);
-    } finally {
-      setLoading(false);
-    }
-  };
+    sessionStorage.setItem('tariffsQuery', userTariffQuery);
+    executeSqlQuery();
+  };  
 
-  const handleTariffClick = (tariffId) => {
-    if (role === "ROLE_TARIFF_MANAGER" || role === "ROLE_ADMIN")
-      navigate(`/tariffs/${tariffId}`);
-  };
-
-  const handleTariffAdded = () => {
-    fetchTariffs();
+  // Обработка смены страниц
+  const handlePageClick = (data) => {
+    setCurrentPage(data.selected);
   };
 
   return (
     <div className="container">
       <h2>Tariffs</h2>
       {role === "ROLE_ADMIN" && (
-      <form onSubmit={handleExecuteQuery} className="form-standard">
+      <form onSubmit={handleSubmitQuery} className="form-standard">
         <div className="form-query-group">
           <input 
             type="text" 
@@ -100,7 +148,7 @@ function Tariffs() {
             className="user-query-input"
           />
         </div>
-        <small>You can use attributes like tariff_id, name, loan term, interest rate, max amount in your WHERE clause.</small>
+        <small>You can use attributes like id, name, loanTerm, interestRate, maxAmount in your WHERE clause.</small>
         <button type="submit" className="execute-query-button">Execute Query</button>
       </form>
       )}
@@ -121,19 +169,19 @@ function Tariffs() {
             </div>
           ))}
         </div>
-        <button type="submit" className="form-button">Apply Filters</button>
+        <button type="submit" className="form-button">Search</button>
       </form>
-      {(role === "ROLE_TARIFF_MANAGER" || role === "ROLE_ADMIN") && (
-        <div className="button-group">
-          <button onClick={() => setModalOpen(true)} className="add-button">Add Tariff</button>
-        </div>
-      )}
-      {modalOpen && <AddTariffModal onClose={() => setModalOpen(false)} onTariffAdded={handleTariffAdded} />}
+      {(role === "ROLE_TARIFF_MANAGER" || role === "ROLE_ADMIN") && <button onClick={() => setModalOpen(true)} className="add-button">Add Tariff</button>}
+      {modalOpen && <AddTariffModal onClose={() => setModalOpen(false)} onTariffAdded={() => setPageCount(0)} />}
       {loading && <div>Loading...</div>}
       {error && <div className="alert-danger">Error: {error}</div>}
       <div className="list-container">
-        {tariffs.map(tariff => (
-          <div key={tariff.id} className="item-card" onClick={() => handleTariffClick(tariff.id)}>
+        {Array.isArray(tariffs) && tariffs.map(tariff => (
+          <div 
+            key={tariff.id} 
+            className="item-card" 
+            onClick={() => navigate(`/tariffs/${tariff.id}`)}
+          >
             <p>Name: {tariff.name}</p>
             <p>Loan Term: {tariff.loanTerm} months</p>
             <p>Interest Rate: {tariff.interestRate}%</p>
@@ -141,6 +189,18 @@ function Tariffs() {
           </div>
         ))}
       </div>
+      {pageCount !== 0 &&
+        <ReactPaginate
+          previousLabel={'previous'}
+          nextLabel={'next'}
+          breakLabel={'...'}
+          pageCount={pageCount}
+          onPageChange={handlePageClick}
+          containerClassName={'pagination'}
+          activeClassName={'active'}
+          forcePage={currentPage}
+        />
+      }
     </div>
   );
 }

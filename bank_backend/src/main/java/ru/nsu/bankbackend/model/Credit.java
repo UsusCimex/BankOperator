@@ -1,7 +1,6 @@
 package ru.nsu.bankbackend.model;
 
-import com.fasterxml.jackson.annotation.JsonFormat;
-import com.fasterxml.jackson.annotation.JsonManagedReference;
+import com.fasterxml.jackson.annotation.*;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.PastOrPresent;
@@ -12,19 +11,19 @@ import java.util.Date;
 
 @Data
 @Entity
+@JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "id")
 public class Credit {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "credit_id")
     private Long id;
 
-    @OneToOne
-    @JsonManagedReference("client-credit")
-    @NotNull
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "client_id", referencedColumnName = "client_id")
+    @NotNull
     private Client client;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.EAGER)
     @NotNull
     @JoinColumn(name = "tarif_id", referencedColumnName = "tariff_id")
     private Tariff tariff;
