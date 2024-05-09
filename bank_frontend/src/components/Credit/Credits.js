@@ -233,8 +233,8 @@ function Credits() {
             <p>Tariff: {credit.tariffName}</p>
             <p>Amount: {credit.amount}</p>
             <p>Status: {credit.status}</p>
-            <p>Start Date: {credit.startDate}</p>
-            <p>End Date: {credit.endDate}</p>
+            <p>Start Date: {credit.startDate.slice(0,16)}</p>
+            <p>End Date: {credit.endDate.slice(0,16)}</p>
           </div>
         ))}
       </div>

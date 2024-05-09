@@ -1,13 +1,12 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import Select from 'react-select';
 import { createCredit } from '../../services/CreditService';
-import { getAllClients } from '../../services/ClientService';
-import { getAllTariffs } from '../../services/TariffService';
+import { getClientsWithFilters } from '../../services/ClientService';
+import { getTariffsWithFilters } from '../../services/TariffService';
+import { AsyncPaginate } from 'react-select-async-paginate';
 import '../AddForm.css';
 
 export function AddCreditModal({ onClose, onCreditAdded, currentClient }) {
-  const [clientsOptions, setClientsOptions] = useState([]);
-  const [tariffsOptions, setTariffsOptions] = useState([]);
   const [selectedClient, setSelectedClient] = useState(currentClient || null);
   const [selectedTariff, setSelectedTariff] = useState(null);
   const [selectedStatus, setSelectedStatus] = useState(null);
@@ -19,21 +18,6 @@ export function AddCreditModal({ onClose, onCreditAdded, currentClient }) {
     { value: 'CLOSED', label: 'Closed' },
     { value: 'EXPIRED', label: 'Expired' }
   ];
-
-  useEffect(() => {
-    const loadOptions = async () => {
-      try {
-        const clients = await getAllClients();
-        const tariffs = await getAllTariffs();
-        setClientsOptions(clients.map(client => ({ value: client.id, label: client.name })));
-        setTariffsOptions(tariffs.map(tariff => ({ value: tariff.id, label: tariff.name })));
-      } catch (err) {
-        console.error('Failed to fetch options:', err);
-        setError('Failed to load options');
-      }
-    };
-    loadOptions();
-  }, []);
 
   const handleSubmit = async (event) => {
     event.preventDefault();
@@ -55,25 +39,64 @@ export function AddCreditModal({ onClose, onCreditAdded, currentClient }) {
     }
   };
 
+  // Функция для загрузки данных клиентов с фильтрацией
+  const loadClientOptions = async (searchQuery, loadedOptions, { page }) => {
+    const filters = { name: searchQuery }; // добавляем фильтрацию по имени
+    const response = await getClientsWithFilters(page, filters);
+    return {
+      options: response.content.map(client => ({
+        label: `${client.name} (${client.phone})`,
+        value: client.id
+      })),
+      hasMore: !response.last,
+      additional: {
+        page: page + 1
+      }
+    };
+  };
+
+  // Функция для загрузки данных тарифов с фильтрацией
+  const loadTariffOptions = async (searchQuery, loadedOptions, { page }) => {
+    const filters = { name: searchQuery }; // добавляем фильтрацию по имени
+    const response = await getTariffsWithFilters(page, filters);
+    return {
+      options: response.content.map(tariff => ({
+        label: `${tariff.name} (maxAmount = ${tariff.maxAmount})`,
+        value: tariff.id
+      })),
+      hasMore: !response.last,
+      additional: {
+        page: page + 1
+      }
+    };
+  };
+
+
   return (
     <div className="modal-backdrop" onClick={(e) => e.target.className.includes('modal-backdrop') && onClose()}>
       <div className="modal" onClick={(e) => e.stopPropagation()}>
         <h2>Add New Credit</h2>
         {error && <div className="alert alert-danger">{error}</div>}
         <form onSubmit={handleSubmit} className="element-form">
-          <Select
+          <AsyncPaginate
             classNamePrefix="react-select"
             value={selectedClient}
             onChange={setSelectedClient}
-            options={clientsOptions}
+            loadOptions={loadClientOptions}
+            additional={{ page: 0 }}
+            isClearable
+            debounceTimeout={300}
             placeholder="Select Client"
             isDisabled={!!currentClient}
           />
-          <Select
+          <AsyncPaginate
             classNamePrefix="react-select"
             value={selectedTariff}
             onChange={setSelectedTariff}
-            options={tariffsOptions}
+            loadOptions={loadTariffOptions}
+            additional={{ page: 0 }}
+            isClearable
+            debounceTimeout={300}
             placeholder="Select Tariff"
           />
           <Select

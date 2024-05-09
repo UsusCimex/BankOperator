@@ -1,12 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import Select from 'react-select';
+import Select from 'react-select'
+import { AsyncPaginate } from 'react-select-async-paginate';
 import { getCreditById, updateCredit, deleteCredit } from '../../services/CreditService';
-import { getAllClients } from '../../services/ClientService';
-import { getAllTariffs } from '../../services/TariffService';
-import { getCreditPayments } from '../../services/PaymentService'
-import { AddPaymentModal } from '../Payment/AddPaymentModal'
-import '../History.css'
+import { getClientsWithFilters } from '../../services/ClientService';
+import { getTariffsWithFilters } from '../../services/TariffService';
+import { getCreditPayments } from '../../services/PaymentService';
+import { AddPaymentModal } from '../Payment/AddPaymentModal';
+import '../History.css';
 import '../DetailEdit.css';
 
 const statusOptions = [
@@ -25,8 +26,7 @@ function CreditPage() {
     status: '',
     startDate: ''
   });
-  const [clientsOptions, setClientsOptions] = useState([]);
-  const [tariffsOptions, setTariffsOptions] = useState([]);
+
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -34,65 +34,42 @@ function CreditPage() {
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
 
   useEffect(() => {
-    async function fetchData() {
-      setLoading(true);
-      try {
-        const [clients, tariffs] = await Promise.all([getAllClients(), getAllTariffs()]);
-        setClientsOptions(clients.map(client => ({
-          value: client.id,
-          label: `${client.name} (phone: ${client.phone})`,
-          data: client
-        })));
-        setTariffsOptions(tariffs.map(tariff => ({
-          value: tariff.id,
-          label: `${tariff.name}`,
-          data: tariff
-        })));
-        setError(null);
-      } catch (error) {
-        setError("Failed to fetch clients or tariffs: " + error.message);
-      } finally {
-        setLoading(false);
-      }
-    }
-    fetchData();
-  }, []);
-
-  useEffect(() => {
     async function fetchCredit() {
       try {
-        const data = await getCreditById(creditId);
-        setCredit({
-          ...data,
-          client: clientsOptions.find(c => c.value === data.client.id) || null,
-          tariff: tariffsOptions.find(t => t.value === data.tariff.id) || null,
-          status: data.status || '',
-          startDate: data.startDate || ''
-        });
+          const data = await getCreditById(creditId);
+          setCredit({
+            ...data,
+            client: { label: `${data.clientName}`, value: data.clientId },
+            tariff: { label: `${data.tariffName}`, value: data.tariffId },
+            status: data.status,
+            startDate: data.startDate.slice(0, 16)
+          });        
 
-        const paymentsData = await getCreditPayments(creditId);
-        setPayments(paymentsData);
+          const paymentsData = await getCreditPayments(creditId);
+          setPayments(paymentsData);
       } catch (error) {
-        setError("Failed to fetch credit details: " + error.message);
+          setError("Failed to fetch credit details: " + error.message);
+      } finally {
+          setLoading(false);
       }
     }
 
-    if (!loading && clientsOptions.length > 0 && tariffsOptions.length > 0) {
-      fetchCredit();
-    }
-  }, [creditId, clientsOptions, tariffsOptions, loading]);
+    fetchCredit();
+  }, [creditId]);
 
   const handleUpdate = async () => {
     const updatedCredit = {
-      ...credit,
-      client: credit.client?.data,
-      tariff: credit.tariff?.data,
-      status: credit.status
+      id: creditId,
+      clientId: credit.client.value,
+      tariffId: credit.tariff.value,
+      amount: credit.amount,
+      status: credit.status.value,
+      startDate: credit.startDate
     };
-
+  
     try {
       await updateCredit(creditId, updatedCredit);
-      alert('Client updated successfully');
+      alert('Credit updated successfully');
       navigate('/credits');
     } catch (error) {
       setError("Failed to update credit: " + error.message);
@@ -114,7 +91,7 @@ function CreditPage() {
   };
 
   const handleSelectChange = (name, selectedOption) => {
-    setCredit({ ...credit, [name]: selectedOption ? selectedOption.value : '' });
+    setCredit({ ...credit, [name]: selectedOption ? { label: selectedOption.label, value: selectedOption.value } : '' });
   };
 
   const dismissError = () => {
@@ -134,6 +111,38 @@ function CreditPage() {
     setPayments(paymentsData);
   };
 
+  // Функция для загрузки данных клиентов с фильтрацией
+  const loadClientOptions = async (searchQuery, loadedOptions, { page }) => {
+    const filters = { name: searchQuery }; // добавляем фильтрацию по имени
+    const response = await getClientsWithFilters(page, filters);
+    return {
+      options: response.content.map(client => ({
+        label: `${client.name} (${client.phone})`,
+        value: client.id
+      })),
+      hasMore: !response.last,
+      additional: {
+        page: page + 1
+      }
+    };
+  };
+
+  // Функция для загрузки данных тарифов с фильтрацией
+  const loadTariffOptions = async (searchQuery, loadedOptions, { page }) => {
+    const filters = { name: searchQuery }; // добавляем фильтрацию по имени
+    const response = await getTariffsWithFilters(page, filters);
+    return {
+      options: response.content.map(tariff => ({
+        label: `${tariff.name} (maxAmount = ${tariff.maxAmount})`,
+        value: tariff.id
+      })),
+      hasMore: !response.last,
+      additional: {
+        page: page + 1
+      }
+    };
+  };
+
   if (loading) return <div>Loading...</div>;
   if (!credit) return <div>No credit data found.</div>;
 
@@ -150,23 +159,29 @@ function CreditPage() {
 
       <h2 className="detail-header">Credit Details</h2>
       <div className="detail-details">
-      <label htmlFor="client">Client:</label>
-        <Select
+        <label htmlFor="client">Client:</label>
+        <AsyncPaginate
           id="client"
           name="client"
           value={credit.client}
           onChange={(option) => handleSelectChange('client', option)}
-          options={clientsOptions}
+          loadOptions={loadClientOptions}
+          additional={{ page: 0 }}
+          isClearable
+          debounceTimeout={300}
           placeholder="Select Client"
         />
 
         <label htmlFor="tariff">Tariff:</label>
-        <Select
+        <AsyncPaginate
           id="tariff"
           name="tariff"
           value={credit.tariff}
           onChange={(option) => handleSelectChange('tariff', option)}
-          options={tariffsOptions}
+          loadOptions={loadTariffOptions}
+          additional={{ page: 0 }}
+          isClearable
+          debounceTimeout={300}
           placeholder="Select Tariff"
         />
 

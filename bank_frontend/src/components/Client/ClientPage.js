@@ -188,7 +188,7 @@ function ClientPage() {
         {credits.map(credit => (
           <Link to={`/credits/${credit.id}`} key={`credit${credit.id}`} className="history-button">
             <div className="history-content">
-              <strong>Tariff: {credit.tariff.name}</strong>
+              <strong>Tariff: {credit.tariffName}</strong>
               <div>Amount: {credit.amount}</div>
               <div>Status: {credit.status}</div>
             </div>

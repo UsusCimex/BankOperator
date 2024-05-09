@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import Select from 'react-select';
+import { AsyncPaginate } from 'react-select-async-paginate';
 import { getPaymentById, updatePayment, deletePayment } from '../../services/PaymentService';
-import { getAllCredits } from '../../services/CreditService';
+import { getCreditsWithFilters } from '../../services/CreditService';
 import '../DetailEdit.css';
 
 function PaymentPage() {
@@ -15,28 +15,33 @@ function PaymentPage() {
     paymentType: '',
     commission: 0
   });
-  const [creditsOptions, setCreditsOptions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+
+  // Функция для загрузки данных клиентов с фильтрацией
+  const loadCreditOptions = async (searchQuery, loadedOptions, { page }) => {
+    const filters = { clientName: searchQuery }; // добавляем фильтрацию по имени
+    const response = await getCreditsWithFilters(page, filters);
+    return {
+      options: response.content.map(credit => ({
+        label: `${credit.clientName} (${credit.status})`,
+        value: credit.id
+      })),
+      hasMore: !response.last,
+      additional: {
+        page: page + 1
+      }
+    };
+  };
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        setLoading(true);
-        const [credits, paymentDetails] = await Promise.all([
-          getAllCredits(),
-          getPaymentById(paymentId)
-        ]);
-
-        setCreditsOptions(credits.map(credit => ({
-          value: credit.id,
-          label: `Client: ${credit.client?.name}, Tariff: ${credit.tariff?.name}, Amount: ${credit.amount}`,
-          data: credit
-        })));
-
+        const paymentDetails = await getPaymentById(paymentId);
         setPayment({
           ...paymentDetails,
-          credit: credits.find(c => c.id === paymentDetails.credit.id) || null
+          credit: { label: `Client: ${paymentDetails.clientName}, Tariff: ${paymentDetails.tariffName}, Amount: ${paymentDetails.amount}`, value: paymentDetails.creditId },
+          paymentDate: paymentDetails.paymentDate.slice(0, 16)
         });
         setError(null);
       } catch (error) {
@@ -84,7 +89,7 @@ function PaymentPage() {
 
   const handleSelectChange = (option) => {
     setPayment(prev => ({ ...prev, credit: option ? option.data : null }));
-  };
+  };  
 
   if (loading) return <div>Loading...</div>;
   if (!payment) return <div>No payment data found.</div>;
@@ -103,11 +108,14 @@ function PaymentPage() {
       <h2 className="detail-header">Payment Details</h2>
       <div className="detail-details">
         <label htmlFor="credit">Credit:</label>
-        <Select
+        <AsyncPaginate
           name="credit"
-          value={creditsOptions.find(option => option.data === payment.credit)}
+          value={payment.credit}
           onChange={handleSelectChange}
-          options={creditsOptions}
+          loadOptions={loadCreditOptions}
+          additional={{ page: 0 }}
+          isClearable
+          debounceTimeout={300}
           placeholder="Select Credit"
           className="input"
         />

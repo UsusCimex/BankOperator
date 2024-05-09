@@ -17,7 +17,7 @@ export const getCreditsWithFilters = async (page, filters) => {
     Object.entries(filters).forEach(([key, value]) => {
       if (value || value === false) {
         if ((key === 'startDate' || key === 'endDate') && value) {
-          params.append(key, new Date(value).toISOString().split('T')[0]);
+          params.append(key, new Date(value).toISOString().slice(0, 16));
         } else {
           params.append(key, value);
         }
