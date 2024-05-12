@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { getClientById, updateClient, deleteClient, blockClient, unblockClient } from '../../services/ClientService';
 import { getClientCredits } from '../../services/CreditService';
@@ -19,27 +19,28 @@ function ClientPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   // Загрузка данных клиента и его кредитов при монтировании
+  const fetchData = useCallback(async () => {
+    setLoading(true);
+    try {
+      const clientData = await getClientById(clientId);
+      const creditsData = await getClientCredits(clientId);
+      setClient(clientData);
+      setCredits(creditsData);
+    } catch (error) {
+      console.error("Failed to fetch client details:", error);
+      setError(`Failed to fetch client details\nError: ${error.message}`);
+    } finally {
+      setLoading(false);
+    }
+  }, [clientId]);
+
   useEffect(() => {
     const timer = setTimeout(() => {
-      const fetchData = async () => {
-        setLoading(true);
-        try {
-          const clientData = await getClientById(clientId);
-          const creditsData = await getClientCredits(clientId);
-          setClient(clientData);
-          setCredits(creditsData);
-        } catch (error) {
-          console.error("Failed to fetch client details:", error);
-          setError(`Failed to fetch client details\nError: ${error.message}`);
-        } finally {
-          setLoading(false);
-        }
-      };
       fetchData();
     }, 50);
 
     return () => clearTimeout(timer);
-  }, [clientId]);
+  }, [fetchData]);
 
   // Обновление информации о кредитах
   const refreshCredits = async () => {

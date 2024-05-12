@@ -84,8 +84,7 @@ function Clients() {
     }
   }, [baseQuery]);
 
-  // Загрузка сохраненных данных из sessionStorage при монтировании
-  useEffect(() => {
+  const fetchData = useCallback(() => {
     const savedQuery = sessionStorage.getItem('clientsQuery');
     if (savedQuery) setUserClientQuery(savedQuery);
 
@@ -103,7 +102,16 @@ function Clients() {
     } else {
       fetchClients();
     }
-  }, [currentPage, executeSqlQuery, fetchClients, loadDataWithFilters]);
+  }, [executeSqlQuery, fetchClients, loadDataWithFilters]);
+
+  // Загрузка сохраненных данных из sessionStorage при монтировании
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      fetchData();
+    }, 50);
+
+    return () => clearTimeout(timer);
+  }, [fetchData]);
 
   // Обработчик изменений фильтров
   const handleFilterChange = (e) => {

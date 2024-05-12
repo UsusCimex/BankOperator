@@ -82,7 +82,7 @@ function Payments() {
   }, [baseQuery]);
 
   // Загрузка сохраненных данных из sessionStorage при монтировании
-  useEffect(() => {
+  const fetchData = useCallback(() => {
     const savedQuery = sessionStorage.getItem('paymentsQuery');
     if (savedQuery) setUserPaymentQuery(savedQuery);
 
@@ -100,7 +100,15 @@ function Payments() {
     } else {
       fetchPayments();
     }
-  }, [currentPage, executeSqlQuery, fetchPayments, loadDataWithFilters]);
+  }, [executeSqlQuery, fetchPayments, loadDataWithFilters]);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      fetchData();
+    }, 50);
+
+    return () => clearTimeout(timer);
+  }, [fetchData]);
 
   // Обработчик изменений фильтров
   const handleFilterChange = (e) => {

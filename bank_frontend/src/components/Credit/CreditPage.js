@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import Select from 'react-select'
 import { AsyncPaginate } from 'react-select-async-paginate';
@@ -33,29 +33,34 @@ function CreditPage() {
   const [payments, setPayments] = useState([]);
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
 
-  useEffect(() => {
-    async function fetchCredit() {
-      try {
-          const data = await getCreditById(creditId);
-          setCredit({
-            ...data,
-            client: { label: `${data.clientName}`, value: data.clientId },
-            tariff: { label: `${data.tariffName}`, value: data.tariffId },
-            status: data.status,
-            startDate: data.startDate.slice(0, 16)
-          });        
+  const fetchData = useCallback(async () => {
+    try {
+      const data = await getCreditById(creditId);
+        setCredit({
+          ...data,
+          client: { label: `${data.clientName}`, value: data.clientId },
+          tariff: { label: `${data.tariffName}`, value: data.tariffId },
+          status: data.status,
+          startDate: data.startDate
+        });        
 
-          const paymentsData = await getCreditPayments(creditId);
-          setPayments(paymentsData);
-      } catch (error) {
-          setError("Failed to fetch credit details: " + error.message);
-      } finally {
-          setLoading(false);
-      }
+        const paymentsData = await getCreditPayments(creditId);
+        setPayments(paymentsData);
+        setError(null);
+    } catch (error) {
+      setError("Failed to fetch credit details: " + error.message);
+    } finally {
+      setLoading(false);
     }
-
-    fetchCredit();
   }, [creditId]);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      fetchData();
+    }, 50);
+
+    return () => clearTimeout(timer);
+  }, [fetchData]);
 
   const handleUpdate = async () => {
     const updatedCredit = {
@@ -104,6 +109,7 @@ function CreditPage() {
 
   const handlePaymentModalClose = () => {
     setIsPaymentModalOpen(false);
+    fetchData();
   };
 
   const refreshPayments = async () => {
@@ -215,6 +221,9 @@ function CreditPage() {
           value={credit.startDate}
           onChange={handleChange}
         />
+
+        <p>Mandatory Payment Amount: {credit.mandatoryPaymentAmount}</p>
+        <p>Mandatory Payment End Date: {credit.mandatoryPaymentDate}</p>
       </div>
       <div className="buttons">
         <button className="button" onClick={handleUpdate}>Save Changes</button>

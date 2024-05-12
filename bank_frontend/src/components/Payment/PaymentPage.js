@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useCallback, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { AsyncPaginate } from 'react-select-async-paginate';
 import { getPaymentById, updatePayment, deletePayment } from '../../services/PaymentService';
@@ -34,25 +34,29 @@ function PaymentPage() {
     };
   };
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const paymentDetails = await getPaymentById(paymentId);
-        setPayment({
-          ...paymentDetails,
-          credit: { label: `Client: ${paymentDetails.clientName}, Tariff: ${paymentDetails.tariffName}, Amount: ${paymentDetails.amount}`, value: paymentDetails.creditId },
-          paymentDate: paymentDetails.paymentDate.slice(0, 16)
-        });
-        setError(null);
-      } catch (error) {
-        setError("Failed to load data: " + error.message);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchData();
+  const fetchData = useCallback(async () => {
+    try {
+      const paymentDetails = await getPaymentById(paymentId);
+      setPayment({
+        ...paymentDetails,
+        credit: { label: `Client: ${paymentDetails.clientName}, Tariff: ${paymentDetails.tariffName}, Amount: ${paymentDetails.amount}`, value: paymentDetails.creditId },
+        paymentDate: paymentDetails.paymentDate
+      });
+      setError(null);
+    } catch (error) {
+      setError("Failed to load data: " + error.message);
+    } finally {
+      setLoading(false);
+    }
   }, [paymentId]);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      fetchData();
+    }, 50);
+
+    return () => clearTimeout(timer);
+  }, [fetchData]);
 
   const handleUpdate = async () => {
     try {

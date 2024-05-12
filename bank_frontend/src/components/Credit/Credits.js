@@ -82,7 +82,7 @@ function Credits() {
   }, [baseQuery]);
 
   // Загрузка сохраненных данных из sessionStorage при монтировании
-  useEffect(() => {
+  const fetchData = useCallback(() => {
     const savedQuery = sessionStorage.getItem('creditQuery');
     if (savedQuery) setUserCreditQuery(savedQuery);
 
@@ -100,7 +100,15 @@ function Credits() {
     } else {
       fetchCredits();
     }
-  }, [currentPage, executeSqlQuery, fetchCredits, loadDataWithFilters]);
+  }, [executeSqlQuery, fetchCredits, loadDataWithFilters]);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      fetchData();
+    }, 50);
+
+    return () => clearTimeout(timer);
+  }, [fetchData]);
 
   // Обработчик изменений фильтров
   const handleFilterChange = (e) => {
@@ -244,8 +252,8 @@ function Credits() {
             <p>Tariff: {credit.tariffName}</p>
             <p>Amount: {credit.amount}</p>
             <p>Status: {credit.status}</p>
-            <p>Start Date: {credit.startDate.slice(0,16)}</p>
-            <p>End Date: {credit.endDate.slice(0,16)}</p>
+            <p>Start Date: {credit.startDate}</p>
+            <p>End Date: {credit.endDate}</p>
           </div>
         ))}
       </div>

@@ -82,7 +82,7 @@ function Tariffs() {
   }, [baseQuery]);
 
   // Загрузка сохраненных данных из sessionStorage при монтировании
-  useEffect(() => {
+  const fetchData = useCallback(() => {
     const savedQuery = sessionStorage.getItem('tariffsQuery');
     if (savedQuery) setUserTariffQuery(savedQuery);
 
@@ -100,7 +100,15 @@ function Tariffs() {
     } else {
       fetchTariffs();
     }
-  }, [currentPage, executeSqlQuery, fetchTariffs, loadDataWithFilters]);
+  }, [executeSqlQuery, fetchTariffs, loadDataWithFilters]);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      fetchData();
+    }, 50);
+
+    return () => clearTimeout(timer);
+  }, [fetchData]);
 
   // Обработчик изменений фильтров
   const handleFilterChange = (e) => {

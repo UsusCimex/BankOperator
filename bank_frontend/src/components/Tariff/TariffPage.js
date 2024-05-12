@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { getTariffById, updateTariff, deleteTariff } from '../../services/TariffService';
 import '../DetailEdit.css';
@@ -15,22 +15,27 @@ function TariffPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  useEffect(() => {
-    const fetchTariff = async () => {
-      setLoading(true);
-      try {
-        const data = await getTariffById(tariffId);
-        setTariff(data);
-        setError(null);
-      } catch (error) {
-        console.error("Failed to fetch tariff details:", error);
-        setError("Failed to fetch tariff details");
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchTariff();
+  const fetchData = useCallback(async () => {
+    setLoading(true);
+    try {
+      const data = await getTariffById(tariffId);
+      setTariff(data);
+      setError(null);
+    } catch (error) {
+      console.error("Failed to fetch tariff details:", error);
+      setError("Failed to fetch tariff details");
+    } finally {
+      setLoading(false);
+    }
   }, [tariffId]);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      fetchData();
+    }, 50);
+
+    return () => clearTimeout(timer);
+  }, [fetchData]);
 
   const handleUpdate = async () => {
     try {
