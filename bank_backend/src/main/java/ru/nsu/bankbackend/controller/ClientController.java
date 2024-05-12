@@ -12,6 +12,7 @@ import ru.nsu.bankbackend.dto.ClientDetailDTO;
 import ru.nsu.bankbackend.model.Client;
 import ru.nsu.bankbackend.service.ClientService;
 
+import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
@@ -53,7 +54,7 @@ public class ClientController {
     @PreAuthorize("hasAnyRole('ADMIN', 'OPERATOR')")
     public ResponseEntity<?> blockClient(
             @PathVariable Long clientId,
-            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) Date endDate
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDateTime endDate
     ) {
         try {
             ClientDetailDTO client = clientService.blockClient(clientId, endDate);

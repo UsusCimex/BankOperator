@@ -7,7 +7,7 @@ import jakarta.validation.constraints.PastOrPresent;
 import jakarta.validation.constraints.Positive;
 import lombok.Data;
 
-import java.util.Date;
+import java.time.LocalDate;
 
 @Data
 @Entity
@@ -31,7 +31,7 @@ public class Credit {
     @Positive
     @NotNull
     @Column(name = "amount")
-    private Long amount; // Сумма кредита
+    private Double amount; // Сумма кредита
 
     public enum Status {
         ACTIVE, CLOSED, EXPIRED
@@ -44,23 +44,14 @@ public class Credit {
     @PastOrPresent
     @JsonFormat(pattern="yyyy-MM-dd'T'HH:mm")
     @Column(name = "start_date")
-    private Date startDate;
+    private LocalDate startDate;
 
     @JsonFormat(pattern="yyyy-MM-dd'T'HH:mm")
     @Column(name = "end_date")
-    private Date endDate;
+    private LocalDate endDate;
 
-    public Credit() {}
-
-    public Credit(Long id, Long amount, Date endDate, Date startDate, Status status, Client client, Tariff tariff) {
-        this.id = id;
-        this.client = client;
-        this.tariff = tariff;
-        this.amount = amount;
-        this.status = status;
-        this.startDate = startDate;
-        this.endDate = endDate;
-    }
+    @OneToOne(mappedBy = "credit", fetch = FetchType.LAZY)
+    private MandatoryPayment mandatoryPayment;
 
     public static Status convertStringToStatus(String statusStr) {
         try {

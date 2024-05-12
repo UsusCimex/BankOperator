@@ -14,7 +14,7 @@ public class PaymentSpecification {
         return (root, query, criteriaBuilder) -> {
             Join<Payment, Client> creditJoin = root.join("credit", JoinType.LEFT);
             Join<Payment, Client> clientJoin = creditJoin.join("client", JoinType.LEFT);
-            return criteriaBuilder.like(clientJoin.get("name"), "%" + clientName + "%");
+            return criteriaBuilder.like(criteriaBuilder.lower(clientJoin.get("name")), "%" + clientName.toLowerCase() + "%");
         };
     }
 

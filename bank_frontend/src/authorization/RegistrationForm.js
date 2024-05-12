@@ -5,7 +5,7 @@ import './Authorization.css'
 const RegistrationForm = ({ onSignUp }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [role, setRole] = useState('OPERATOR');
+  const [role, setRole] = useState('ROLE_OPERATOR');
   const [error, setError] = useState('');
 
   const handleSubmit = async (event) => {

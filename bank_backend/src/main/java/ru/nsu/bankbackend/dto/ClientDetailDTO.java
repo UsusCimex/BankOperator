@@ -1,7 +1,9 @@
 package ru.nsu.bankbackend.dto;
 
 import lombok.Data;
-import java.util.Date;
+
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 @Data
 public class ClientDetailDTO {
@@ -10,8 +12,8 @@ public class ClientDetailDTO {
     private String email;
     private String phone;
     private String passportData;
-    private Date birthDate;
+    private LocalDate birthDate;
     private Boolean isBlocked;
-    private Date blockEndDate;
+    private LocalDateTime blockEndDate;
     private String creditStatus;
 }

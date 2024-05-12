@@ -11,14 +11,14 @@ public class CreditSpecification {
     public static Specification<Credit> hasClientNameLike(String name) {
         return (root, query, criteriaBuilder) -> {
             Join<Credit, Client> clientJoin = root.join("client");
-            return criteriaBuilder.like(clientJoin.get("name"), "%" + name + "%");
+            return criteriaBuilder.like(criteriaBuilder.lower(clientJoin.get("name")), "%" + name.toLowerCase() + "%");
         };
     }
 
     public static Specification<Credit> hasTariffNameLike(String tariffName) {
         return (root, query, criteriaBuilder) -> {
             Join<Credit, Client> tariffJoin = root.join("tariff");
-            return criteriaBuilder.like(tariffJoin.get("name"), "%" + tariffName + "%");
+            return criteriaBuilder.like(criteriaBuilder.lower(tariffJoin.get("name")), "%" + tariffName.toLowerCase() + "%");
         };
     }
 

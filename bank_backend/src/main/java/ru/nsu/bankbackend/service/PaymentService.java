@@ -5,7 +5,6 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
-import jakarta.persistence.Query;
 import jakarta.persistence.TypedQuery;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,15 +15,12 @@ import org.springframework.stereotype.Service;
 import ru.nsu.bankbackend.cpecification.PaymentSpecification;
 import ru.nsu.bankbackend.dto.PaymentDTO;
 import ru.nsu.bankbackend.dto.PaymentDetailDTO;
-import ru.nsu.bankbackend.model.Credit;
-import ru.nsu.bankbackend.model.Payment;
-import ru.nsu.bankbackend.repository.CreditRepository;
-import ru.nsu.bankbackend.repository.PaymentRepository;
+import ru.nsu.bankbackend.model.*;
+import ru.nsu.bankbackend.repository.*;
 
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 @Service
 public class PaymentService {
@@ -34,17 +30,73 @@ public class PaymentService {
     private EntityManager entityManager;
     @Autowired
     private CreditRepository creditRepository;
+    @Autowired
+    private PaymentTypeRepository paymentTypeRepository;
+    @Autowired
+    private MandatoryPaymentRepository mandatoryPaymentRepository;
+    @Autowired
+    private PenaltyRepository penaltyRepository;
 
     private PaymentDetailDTO convertToDTO(Payment payment) {
         PaymentDetailDTO dto = new PaymentDetailDTO();
         dto.setId(payment.getId());
+        dto.setCreditId(payment.getCredit().getId());
         dto.setAmount(payment.getAmount());
         dto.setPaymentDate(payment.getPaymentDate());
-        dto.setCommission(payment.getCommission());
-        dto.setPaymentType(payment.getPaymentType());
+        dto.setCommission(payment.getPaymentType().getCommission());
+        dto.setPaymentType(payment.getPaymentType().getPaymentType());
         dto.setClientName(payment.getCredit().getClient().getName());
         dto.setTariffName(payment.getCredit().getTariff().getName());
         return dto;
+    }
+
+    public Payment mapToPayment(PaymentDTO paymentDTO) {
+        Payment payment = new Payment();
+        payment.setPaymentDate(paymentDTO.getPaymentDate());
+        PaymentType paymentType = paymentTypeRepository.findById(paymentDTO.getPaymentTypeId()).orElseThrow(() -> new RuntimeException("Payment type not found"));
+        payment.setPaymentType(paymentType);
+        payment.setAmount(paymentDTO.getAmount());
+        payment.setCredit(creditRepository.findById(paymentDTO.getCreditId()).orElseThrow(() -> new RuntimeException("Credit not found")));
+        return payment;
+    }
+
+    public void processPayment(Payment payment) {
+        Credit credit = payment.getCredit();
+        Tariff tariff = credit.getTariff();
+        MandatoryPayment mandatoryPayment = credit.getMandatoryPayment();
+        Penalty penalty = mandatoryPayment.getPenalty();
+
+        Double realAmount = payment.getAmount() / (1.0 + tariff.getInterestRate() / 100.0);
+
+        if (penalty != null) {
+            Double remainingAmount = realAmount - mandatoryPayment.getPenalty().getAmount();
+            if (remainingAmount > 0.0) {
+                penaltyRepository.delete(penalty);
+                mandatoryPayment.setAmount(mandatoryPayment.getAmount() - remainingAmount);
+                mandatoryPaymentRepository.save(mandatoryPayment);
+            } else {
+                penalty.setAmount(-remainingAmount);
+                penaltyRepository.save(penalty);
+            }
+        } else {
+            mandatoryPayment.setAmount(mandatoryPayment.getAmount() - realAmount);
+            mandatoryPaymentRepository.save(mandatoryPayment);
+        }
+
+        while (mandatoryPayment.getAmount() <= 0L) {
+            if (mandatoryPayment.getLoanTerm() > 0) {
+                mandatoryPayment.setLoanTerm(mandatoryPayment.getLoanTerm() - 1);
+                Double newAmount = credit.getAmount() / tariff.getLoanTerm() + credit.getAmount() * tariff.getInterestRate() / 100.0;
+                mandatoryPayment.setAmount(newAmount + mandatoryPayment.getAmount());
+                mandatoryPayment.setDueDate(mandatoryPayment.getDueDate().plusMonths(1));
+                mandatoryPaymentRepository.save(mandatoryPayment);
+            } else {
+                credit.setStatus(Credit.Status.CLOSED);
+                mandatoryPaymentRepository.delete(mandatoryPayment);
+                creditRepository.save(credit);
+                break;
+            }
+        }
     }
 
     @Transactional
@@ -84,16 +136,10 @@ public class PaymentService {
 
     @Transactional
     public PaymentDetailDTO save(PaymentDTO paymentDetail) {
-        Credit credit = creditRepository.findById(paymentDetail.getCreditId())
-                .orElseThrow(() -> new RuntimeException("Credit not found"));
-
-        Payment payment = new Payment();
-        payment.setCredit(credit);
-        payment.setPaymentDate(paymentDetail.getPaymentDate());
-        payment.setAmount(paymentDetail.getAmount());
-        payment.setPaymentType(paymentDetail.getPaymentType());
-        payment.setCommission(paymentDetail.getCommission());
-        return convertToDTO(paymentRepository.save(payment));
+        Payment payment = mapToPayment(paymentDetail);
+        Payment savedPayment = paymentRepository.save(payment);
+        processPayment(savedPayment);
+        return convertToDTO(savedPayment);
     }
 
     @Transactional
@@ -105,37 +151,11 @@ public class PaymentService {
     public PaymentDetailDTO update(Long id, PaymentDTO paymentDetails) throws Exception {
         return paymentRepository.findById(id)
                 .map(existingPayment -> {
-                    Credit credit = creditRepository.findById(paymentDetails.getCreditId())
-                            .orElseThrow(() -> new RuntimeException("Credit not found"));
-
-                    existingPayment.setPaymentDate(paymentDetails.getPaymentDate());
-                    existingPayment.setPaymentType(paymentDetails.getPaymentType());
-                    existingPayment.setCommission(paymentDetails.getCommission());
-                    existingPayment.setAmount(paymentDetails.getAmount());
-                    existingPayment.setCredit(credit);
+                    Payment updatedPayment = mapToPayment(paymentDetails);
+                    updatedPayment.setId(id);
                     return convertToDTO(paymentRepository.save(existingPayment));
                 })
                 .orElseThrow(() -> new Exception("Платёж не найден."));
-    }
-
-    public Payment mapToPayment(PaymentDTO paymentDTO) {
-        Payment payment = new Payment();
-        payment.setPaymentDate(paymentDTO.getPaymentDate());
-        payment.setPaymentType(paymentDTO.getPaymentType());
-        payment.setCommission(paymentDTO.getCommission());
-        payment.setAmount(paymentDTO.getAmount());
-        payment.setCredit(creditRepository.findById(paymentDTO.getCreditId()).orElseThrow(() -> new RuntimeException("Credit not found")));
-        return payment;
-    }
-
-    public PaymentDTO mapToPaymentDTO(Payment payment) {
-        PaymentDTO paymentDTO = new PaymentDTO();
-        paymentDTO.setPaymentDate(payment.getPaymentDate());
-        paymentDTO.setPaymentType(payment.getPaymentType());
-        paymentDTO.setCommission(payment.getCommission());
-        paymentDTO.setAmount(payment.getAmount());
-        paymentDTO.setCreditId(payment.getCredit().getId());
-        return paymentDTO;
     }
 
     @Transactional

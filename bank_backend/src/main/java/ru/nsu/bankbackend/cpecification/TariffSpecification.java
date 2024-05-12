@@ -6,7 +6,7 @@ import ru.nsu.bankbackend.model.Tariff;
 public class TariffSpecification {
     public static Specification<Tariff> hasNameLike(String name) {
         return (root, query, criteriaBuilder) ->
-                criteriaBuilder.like(root.get("name"), "%" + name + "%");
+                criteriaBuilder.like(criteriaBuilder.lower(root.get("name")), "%" + name.toLowerCase() + "%");
     }
 
     public static Specification<Tariff> hasLoanTermEqualTo(Long loanTerm) {

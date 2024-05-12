@@ -11,12 +11,12 @@ import java.util.Date;
 public class ClientSpecification {
     public static Specification<Client> hasNameLike(String name) {
         return (root, query, criteriaBuilder) ->
-                criteriaBuilder.like(root.<String>get("name"), "%" + name + "%");
+                criteriaBuilder.like(criteriaBuilder.lower(root.<String>get("name")), "%" + name.toLowerCase() + "%");
     }
 
     public static Specification<Client> hasEmailLike(String email) {
         return (root, query, criteriaBuilder) ->
-                criteriaBuilder.like(root.<String>get("email"), "%" + email + "%");
+                criteriaBuilder.like(criteriaBuilder.lower(root.<String>get("email")), "%" + email.toLowerCase() + "%");
     }
 
     public static Specification<Client> hasPhoneLike(String phone) {

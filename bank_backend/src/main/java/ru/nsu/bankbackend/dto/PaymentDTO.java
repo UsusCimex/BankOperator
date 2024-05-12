@@ -2,14 +2,13 @@ package ru.nsu.bankbackend.dto;
 
 import lombok.Data;
 
-import java.util.Date;
+import java.time.LocalDateTime;
 
 @Data
 public class PaymentDTO {
     private Long id;
     private Long creditId;
-    private Long amount;
-    private Date paymentDate;
-    private String paymentType; // Тип платежа(Кредит, Наличка, Перевод)
-    private Long commission;
+    private Double amount;
+    private LocalDateTime paymentDate;
+    private Long paymentTypeId; // Тип платежа(Кредит, Наличка, Перевод)
 }

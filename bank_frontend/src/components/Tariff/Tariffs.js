@@ -172,9 +172,20 @@ function Tariffs() {
         <button type="submit" className="form-button">Search</button>
       </form>
       {(role === "ROLE_TARIFF_MANAGER" || role === "ROLE_ADMIN") && <button onClick={() => setModalOpen(true)} className="add-button">Add Tariff</button>}
-      {modalOpen && <AddTariffModal onClose={() => setModalOpen(false)} onTariffAdded={() => setPageCount(0)} />}
-      {loading && <div>Loading...</div>}
-      {error && <div className="alert-danger">Error: {error}</div>}
+      {modalOpen && 
+        <AddTariffModal 
+          onClose={() => {
+            setModalOpen(false);
+            setCurrentPage(0);
+          }} 
+          onTariffAdded={() => setPageCount(0)} />
+      }
+      {loading && 
+        <div>Loading...</div>
+      }
+      {error && 
+        <div className="alert-danger">Error: {error}</div>
+      }
       <div className="list-container">
         {Array.isArray(tariffs) && tariffs.map(tariff => (
           <div 

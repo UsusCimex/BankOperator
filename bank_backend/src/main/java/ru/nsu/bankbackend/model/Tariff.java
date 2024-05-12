@@ -35,14 +35,4 @@ public class Tariff {
     @NotNull
     @Column(name = "max_amount")
     private Long maxAmount; // Максимальная сумма кредита
-
-    public Tariff() {}
-
-    public Tariff(Long id, Double interestRate, Integer loanTerm, Long maxAmount, String name) {
-        this.id = id;
-        this.name = name;
-        this.loanTerm = loanTerm;
-        this.interestRate = interestRate;
-        this.maxAmount = maxAmount;
-    }
 }

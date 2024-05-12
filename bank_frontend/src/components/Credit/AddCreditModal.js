@@ -12,7 +12,7 @@ export function AddCreditModal({ onClose, onCreditAdded, currentClient }) {
   const [selectedStatus, setSelectedStatus] = useState(null);
   const [startDate, setStartDate] = useState('');
   const [error, setError] = useState('');
-
+  
   const statusOptions = [
     { value: 'ACTIVE', label: 'Active' },
     { value: 'CLOSED', label: 'Closed' },

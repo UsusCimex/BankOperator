@@ -223,9 +223,20 @@ function Credits() {
       {(role === "ROLE_OPERATOR" || role === "ROLE_ADMIN") && (
         <button onClick={() => setModalOpen(true)} className="add-button">Add Credit</button>
       )}
-      {modalOpen && <AddCreditModal onClose={() => setModalOpen(false)} onCreditAdded={() => setPageCount(0)} />}
-      {loading && <div>Loading...</div>}
-      {error && <div className="alert-danger">Error: {error}</div>}
+      {modalOpen && 
+        <AddCreditModal 
+          onClose={() => {
+            setModalOpen(false);
+            setCurrentPage(0);
+          }} 
+          onCreditAdded={() => setPageCount(0)} />
+      }
+      {loading && 
+        <div>Loading...</div>
+      }
+      {error && 
+        <div className="alert-danger">Error: {error}</div>
+      }
       <div className="list-container">
         {Array.isArray(credits) && credits.map(credit => (
           <div key={credit.id} className="item-card" onClick={() => navigate(`/credits/${credit.id}`)}>

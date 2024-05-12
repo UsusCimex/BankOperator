@@ -210,7 +210,7 @@ function CreditPage() {
         <input
           className="input"
           id="startDate"
-          type="datetime-local"
+          type="datetime"
           name="startDate"
           value={credit.startDate}
           onChange={handleChange}

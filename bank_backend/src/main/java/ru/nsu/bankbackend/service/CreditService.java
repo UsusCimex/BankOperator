@@ -17,22 +17,27 @@ import ru.nsu.bankbackend.dto.CreditDTO;
 import ru.nsu.bankbackend.dto.CreditDetailDTO;
 import ru.nsu.bankbackend.model.Client;
 import ru.nsu.bankbackend.model.Credit;
+import ru.nsu.bankbackend.model.MandatoryPayment;
 import ru.nsu.bankbackend.model.Tariff;
 import ru.nsu.bankbackend.repository.ClientRepository;
 import ru.nsu.bankbackend.repository.CreditRepository;
+import ru.nsu.bankbackend.repository.MandatoryPaymentRepository;
 import ru.nsu.bankbackend.repository.TariffRepository;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.*;
 
 @Service
 public class CreditService {
-
     @Autowired
     private CreditRepository creditRepository;
     @Autowired
     private ClientRepository clientRepository;
     @Autowired
     private TariffRepository tariffRepository;
+    @Autowired
+    private MandatoryPaymentRepository mandatoryPaymentRepository;
 
     @PersistenceContext
     private EntityManager entityManager;
@@ -44,7 +49,9 @@ public class CreditService {
         dto.setStatus(credit.getStatus().toString());
         dto.setStartDate(credit.getStartDate());
         dto.setEndDate(credit.getEndDate());
+        dto.setClientId(credit.getClient().getId());
         dto.setClientName(credit.getClient().getName());
+        dto.setTariffId(credit.getTariff().getId());
         dto.setTariffName(credit.getTariff().getName());
         return dto;
     }
@@ -59,7 +66,7 @@ public class CreditService {
         credit.setId(creditDTO.getId());
         credit.setAmount(creditDTO.getAmount());
         credit.setStartDate(creditDTO.getStartDate());
-        credit.setEndDate(calculateEndDate(creditDTO.getStartDate(), tariff.getLoanTerm()));
+        credit.setEndDate(creditDTO.getStartDate().plusMonths(tariff.getLoanTerm()));
         credit.setStatus(creditDTO.getStatus());
         credit.setClient(client);
         credit.setTariff(tariff);
@@ -124,11 +131,24 @@ public class CreditService {
         }
     }
 
+    public MandatoryPayment createInitialMandatoryPayment(Credit credit) {
+        MandatoryPayment payment = new MandatoryPayment();
+        Tariff tariff = credit.getTariff();
+        payment.setCredit(credit);
+        Double initialAmount = credit.getAmount() / tariff.getLoanTerm() + credit.getAmount() * tariff.getInterestRate() / 100.0;
+        payment.setAmount(initialAmount);
+        payment.setDueDate(credit.getStartDate().plusMonths(1));
+        payment.setLoanTerm(tariff.getLoanTerm());
+        return mandatoryPaymentRepository.save(payment);
+    }
+
     @Transactional
     public CreditDetailDTO save(CreditDTO creditDetail) {
         Credit credit = mapToCredit(creditDetail);
         checkCredit(credit);
-        return convertToCreditDetailDTO(creditRepository.save(credit));
+        Credit savedCredit = creditRepository.save(credit);
+        createInitialMandatoryPayment(savedCredit);
+        return convertToCreditDetailDTO(savedCredit);
     }
 
     @Transactional
@@ -141,13 +161,6 @@ public class CreditService {
                     return convertToCreditDetailDTO(creditRepository.save(credit));
                 })
                 .orElseThrow(() -> new Exception("Credit not found"));
-    }
-
-    private Date calculateEndDate(Date startDate, int loanTermMonths) {
-        Calendar calendar = Calendar.getInstance();
-        calendar.setTime(startDate);
-        calendar.add(Calendar.MONTH, loanTermMonths);
-        return calendar.getTime();
     }
 
     @Transactional

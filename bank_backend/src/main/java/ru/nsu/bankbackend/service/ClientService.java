@@ -21,6 +21,7 @@ import ru.nsu.bankbackend.repository.ClientRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.lang.reflect.InvocationTargetException;
+import java.time.LocalDateTime;
 import java.util.*;
 
 @Service
@@ -42,7 +43,7 @@ public class ClientService {
         dto.setBirthDate(client.getBirthDate());
 
         // Проверка и установка статуса блокировки
-        if (client.getBlockage() != null && client.getBlockage().getEndDate().after(new Date())) {
+        if (client.getBlockage() != null && client.getBlockage().getEndDate().isAfter(LocalDateTime.now())) {
             dto.setIsBlocked(true);
             dto.setBlockEndDate(client.getBlockage().getEndDate());
         } else {
@@ -104,11 +105,11 @@ public class ClientService {
     }
 
     @Transactional
-    public ClientDetailDTO blockClient(Long clientId, Date endDate) {
+    public ClientDetailDTO blockClient(Long clientId, LocalDateTime endDate) {
         Client client = clientRepository.findById(clientId).orElseThrow(() -> new RuntimeException("Client not found"));
         Blockage blockage = new Blockage();
         blockage.setClient(client);
-        blockage.setStartDate(new Date());
+        blockage.setStartDate(LocalDateTime.now());
         blockage.setEndDate(endDate);
         client.setBlockage(blockage);
         return convertToDTO(clientRepository.save(client));

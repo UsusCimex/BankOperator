@@ -234,12 +234,26 @@ function Clients() {
         </div>
         <button type="submit" className="form-button">Search</button>
       </form>
-      {(role === "ROLE_OPERATOR" || role === "ROLE_ADMIN") && <button onClick={() => setModalOpen(true)} className="add-button">Add Client</button>}
-      {modalOpen && <AddClientModal onClose={() => setModalOpen(false)} onClientAdded={() => setPageCount(0)} />}
-      {loading && <div>Loading...</div>}
-      {error && <div className="alert-danger">Error: {error}</div>}
+      {(role === "ROLE_OPERATOR" || role === "ROLE_ADMIN") && 
+        <button onClick={() => setModalOpen(true)} className="add-button">Add Client</button>
+      }
+      {modalOpen && 
+        <AddClientModal 
+          onClose={() => {
+            setModalOpen(false);
+            setCurrentPage(0);
+            }} 
+          onClientAdded={() => setPageCount(0)} />
+      }
+      {loading && 
+        <div>Loading...</div>
+      }
+      {error && 
+        <div className="alert-danger">Error: {error}</div>
+      }
       <div className="list-container">
-      {Array.isArray(clients) && clients.map(client => (
+      {Array.isArray(clients) && 
+        clients.map(client => (
         <div
           key={client.id}
           className={`item-card ${client.isBlocked ? 'blocked' : ''}`}

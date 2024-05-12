@@ -205,9 +205,20 @@ function Payments() {
         <button type="submit" className="form-button">Search</button>
       </form>
       {(role === "ROLE_OPERATOR" || role === "ROLE_ADMIN") && <button onClick={() => setModalOpen(true)} className="add-button">Add Payment</button>}
-      {modalOpen && <AddPaymentModal onClose={() => setModalOpen(false)} onPaymentAdded={() => setPageCount(0)} />}
-      {loading && <div>Loading...</div>}
-      {error && <div className="alert-danger">Error: {error}</div>}
+      {modalOpen && 
+        <AddPaymentModal 
+          onClose={() => {
+            setModalOpen(false);
+            setCurrentPage(0);
+          }} 
+          onPaymentAdded={() => setPageCount(0)} />
+      }
+      {loading && 
+        <div>Loading...</div>
+      }
+      {error && 
+        <div className="alert-danger">Error: {error}</div>
+      }
       <div className="list-container">
         {Array.isArray(payments) && payments.map(payment => (
           <div 

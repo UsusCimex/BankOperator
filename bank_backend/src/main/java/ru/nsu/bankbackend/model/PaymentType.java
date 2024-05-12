@@ -3,30 +3,26 @@ package ru.nsu.bankbackend.model;
 import com.fasterxml.jackson.annotation.JsonIdentityInfo;
 import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.PositiveOrZero;
 import lombok.Data;
 
-import java.time.LocalDateTime;
-
-@Data
 @Entity
+@Data
 @JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "id")
-public class Blockage {
+public class PaymentType {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "blockage_id")
+    @Column(name = "payment_type_id")
     private Long id;
 
-    @OneToOne
-    @NotNull
-    @JoinColumn(name = "client_id")
-    private Client client;
+    @NotBlank
+    @Column(name = "payment_type")
+    private String paymentType;
 
     @NotNull
-    @Column(name = "start_date")
-    private LocalDateTime startDate;
-
-    @NotNull
-    @Column(name = "end_date")
-    private LocalDateTime endDate;
+    @PositiveOrZero
+    @Column(name = "commission")
+    private Double commission;
 }

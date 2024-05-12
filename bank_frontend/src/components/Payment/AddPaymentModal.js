@@ -1,14 +1,29 @@
 import React, { useState, useEffect } from 'react';
+import Select from 'react-select';
 import { AsyncPaginate } from 'react-select-async-paginate';
 import { createPayment } from '../../services/PaymentService';
 import { getCreditsWithFilters, getCreditById } from '../../services/CreditService';
+import { getAllPaymentTypes } from '../../services/PaymentTypeService'
 import '../AddForm.css';
 
 export function AddPaymentModal({ onClose, onPaymentAdded, currentCreditId }) {
   const [selectedCredit, setSelectedCredit] = useState(null);
+  const [selectedPaymentType, setSelectedPaymentType] = useState(null);
+  const [paymentTypeOptions, setPaymentTypeOptions] = useState([]);
   const [error, setError] = useState('');
 
   useEffect(() => {
+    const loadOptions = async () => {
+      try {
+        const payments = await getAllPaymentTypes();
+        setPaymentTypeOptions(payments.map(payment => ({ value: payment.id, label: `${payment.paymentType}(${payment.commission}%)`})));
+      } catch (err) {
+        console.error('Failed to fetch options:', err);
+        setError('Failed to load options');
+      }
+    };
+    loadOptions();
+
     const fetchCredit = async () => {
       if (currentCreditId) {
         try {
@@ -32,8 +47,7 @@ export function AddPaymentModal({ onClose, onPaymentAdded, currentCreditId }) {
       creditId: selectedCredit ? selectedCredit.value : null,
       amount: event.target.amount.value,
       paymentDate: event.target.paymentDate.value,
-      paymentType: event.target.paymentType.value,
-      commission: event.target.commission.value || 0,
+      paymentTypeId: selectedPaymentType ? selectedPaymentType.value : '',
     };
 
     try {
@@ -85,8 +99,13 @@ export function AddPaymentModal({ onClose, onPaymentAdded, currentCreditId }) {
 
           <input type="number" name="amount" placeholder="Amount" required />
           <input type="datetime-local" name="paymentDate" placeholder="Payment Date" required />
-          <input type="text" name="paymentType" placeholder="Payment Type" required />
-          <input type="number" name="commission" placeholder="Commission" />
+          <Select
+            classNamePrefix="react-select"
+            value={selectedPaymentType}
+            onChange={setSelectedPaymentType}
+            options={paymentTypeOptions}
+            placeholder="Select PaymentType"
+          />
           <div className="form-buttons">
             <button type="submit" className="button">Add Payment</button>
             <button type="button" className="button" onClick={onClose}>Cancel</button>
