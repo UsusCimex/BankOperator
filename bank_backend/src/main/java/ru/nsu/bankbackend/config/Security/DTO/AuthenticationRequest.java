@@ -1,4 +1,4 @@
-package ru.nsu.bankbackend.config.Security;
+package ru.nsu.bankbackend.config.Security.DTO;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;

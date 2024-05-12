@@ -13,6 +13,7 @@ import PaymentPage from './components/Payment/PaymentPage';
 import { executeCustomQuery } from './services/CustomQueryService';
 import PrivateRoute from './authorization/PrivateRoute';
 import api from './authorization/AxiosApi';
+import ResetPasswordForm from './authorization/ResetPasswordForm'
 
 import Button from '@mui/material/Button';
 import CreateIcon from '@mui/icons-material/Create';
@@ -69,8 +70,9 @@ function App() {
           sessionStorage.removeItem('role');
         }
       };
-      checkAuth();
+      isAuthenticated && checkAuth();
     }, 50);
+
     return () => clearTimeout(timer);
   }, [isAuthenticated]);
 
@@ -118,6 +120,7 @@ function App() {
         <div className="content">
           <Routes>
             <Route path="/" element={<Home isAuthenticated={isAuthenticated} onLogin={handleLogin} />} />
+            <Route path="/reset-password/:token" element={<ResetPasswordForm />} />
             <Route element={<PrivateRoute isAuthenticated={isAuthenticated} />}>
               <Route path="/clients" element={<Clients />} />
               <Route path="/clients/:clientId" element={<ClientPage />} />

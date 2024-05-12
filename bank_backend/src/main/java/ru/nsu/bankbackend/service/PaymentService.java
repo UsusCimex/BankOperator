@@ -83,10 +83,11 @@ public class PaymentService {
             mandatoryPaymentRepository.save(mandatoryPayment);
         }
 
-        while (mandatoryPayment.getAmount() <= 0L) {
+        while (mandatoryPayment.getAmount() <= 0.0) {
             if (mandatoryPayment.getLoanTerm() > 0) {
                 mandatoryPayment.setLoanTerm(mandatoryPayment.getLoanTerm() - 1);
-                Double newAmount = credit.getAmount() / tariff.getLoanTerm() + credit.getAmount() * tariff.getInterestRate() / 100.0;
+                Double newAmount = credit.getAmount() / tariff.getLoanTerm() +
+                        credit.getAmount() * tariff.getInterestRate() / (tariff.getLoanTerm() * 100.0);
                 mandatoryPayment.setAmount(newAmount + mandatoryPayment.getAmount());
                 mandatoryPayment.setDueDate(mandatoryPayment.getDueDate().plusMonths(1));
                 mandatoryPaymentRepository.save(mandatoryPayment);

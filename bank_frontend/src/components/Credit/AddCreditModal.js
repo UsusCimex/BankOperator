@@ -107,7 +107,7 @@ export function AddCreditModal({ onClose, onCreditAdded, currentClient }) {
             placeholder="Select Status"
           />
           <input type="number" name="amount" placeholder="Amount" required />
-          <input type="datetime-local" name="startDate" value={startDate} onChange={(e) => setStartDate(e.target.value)} required />
+          <input type="date" name="startDate" value={startDate} onChange={(e) => setStartDate(e.target.value)} required />
           <div className="form-buttons">
             <button type="submit" className="button">Add Credit</button>
             <button type="button" className="button" onClick={onClose}>Cancel</button>

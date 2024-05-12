@@ -222,8 +222,9 @@ function CreditPage() {
           onChange={handleChange}
         />
 
-        <p>Mandatory Payment Amount: {credit.mandatoryPaymentAmount}</p>
-        <p>Mandatory Payment End Date: {credit.mandatoryPaymentDate}</p>
+        <p>Mandatory Payment Amount: {credit.mandatoryPaymentAmount || 'N/A'}</p>
+        <p>Mandatory Payment End Date: {credit.mandatoryPaymentDate || 'N/A'}</p>
+        <p>Mandatory Penalty: {credit.mandatoryPenalty || 'N/A'}</p>
       </div>
       <div className="buttons">
         <button className="button" onClick={handleUpdate}>Save Changes</button>

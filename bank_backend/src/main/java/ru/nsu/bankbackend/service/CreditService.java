@@ -15,17 +15,12 @@ import org.springframework.stereotype.Service;
 import ru.nsu.bankbackend.cpecification.CreditSpecification;
 import ru.nsu.bankbackend.dto.CreditDTO;
 import ru.nsu.bankbackend.dto.CreditDetailDTO;
-import ru.nsu.bankbackend.model.Client;
-import ru.nsu.bankbackend.model.Credit;
-import ru.nsu.bankbackend.model.MandatoryPayment;
-import ru.nsu.bankbackend.model.Tariff;
+import ru.nsu.bankbackend.model.*;
 import ru.nsu.bankbackend.repository.ClientRepository;
 import ru.nsu.bankbackend.repository.CreditRepository;
 import ru.nsu.bankbackend.repository.MandatoryPaymentRepository;
 import ru.nsu.bankbackend.repository.TariffRepository;
 
-import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.util.*;
 
 @Service
@@ -49,12 +44,28 @@ public class CreditService {
         dto.setStatus(credit.getStatus().toString());
         dto.setStartDate(credit.getStartDate());
         dto.setEndDate(credit.getEndDate());
-        dto.setClientId(credit.getClient().getId());
-        dto.setClientName(credit.getClient().getName());
-        dto.setTariffId(credit.getTariff().getId());
-        dto.setTariffName(credit.getTariff().getName());
-        dto.setMandatoryPaymentAmount(credit.getMandatoryPayment().getAmount());
-        dto.setMandatoryPaymentDate(credit.getMandatoryPayment().getDueDate());
+
+        Client client = credit.getClient();
+        if (client != null) {
+            dto.setClientId(client.getId());
+            dto.setClientName(client.getName());
+        }
+
+        Tariff tariff = credit.getTariff();
+        if (tariff != null) {
+            dto.setTariffId(tariff.getId());
+            dto.setTariffName(tariff.getName());
+        }
+
+        MandatoryPayment mandatoryPayment = credit.getMandatoryPayment();
+        if (mandatoryPayment != null) {
+            dto.setMandatoryPaymentAmount(credit.getMandatoryPayment().getAmount());
+            dto.setMandatoryPaymentDate(credit.getMandatoryPayment().getDueDate());
+            Penalty penalty = credit.getMandatoryPayment().getPenalty();
+            if (penalty != null) {
+                dto.setMandatoryPenalty(penalty.getAmount());
+            }
+        }
         return dto;
     }
 
@@ -133,15 +144,18 @@ public class CreditService {
         }
     }
 
-    public MandatoryPayment createInitialMandatoryPayment(Credit credit) {
-        MandatoryPayment payment = new MandatoryPayment();
-        Tariff tariff = credit.getTariff();
-        payment.setCredit(credit);
-        Double initialAmount = credit.getAmount() / tariff.getLoanTerm() + credit.getAmount() * tariff.getInterestRate() / 100.0;
-        payment.setAmount(initialAmount);
-        payment.setDueDate(credit.getStartDate().plusMonths(1));
-        payment.setLoanTerm(tariff.getLoanTerm());
-        return mandatoryPaymentRepository.save(payment);
+    public void createInitialMandatoryPayment(Credit credit) {
+        if (credit.getStatus() == Credit.Status.ACTIVE) {
+            MandatoryPayment payment = new MandatoryPayment();
+            Tariff tariff = credit.getTariff();
+            payment.setCredit(credit);
+            Double initialAmount = credit.getAmount() / tariff.getLoanTerm() +
+                    credit.getAmount() * tariff.getInterestRate() / (tariff.getLoanTerm() * 100.0);
+            payment.setAmount(initialAmount);
+            payment.setDueDate(credit.getStartDate().plusMonths(1));
+            payment.setLoanTerm(tariff.getLoanTerm());
+            mandatoryPaymentRepository.save(payment);
+        }
     }
 
     @Transactional

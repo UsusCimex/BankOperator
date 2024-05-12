@@ -1,18 +1,23 @@
 package ru.nsu.bankbackend.controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import ru.nsu.bankbackend.config.Security.AuthenticationRequest;
-import ru.nsu.bankbackend.config.Security.AuthenticationResponse;
+import ru.nsu.bankbackend.config.Security.DTO.AuthenticationRequest;
+import ru.nsu.bankbackend.config.Security.DTO.AuthenticationResponse;
+import ru.nsu.bankbackend.config.Security.DTO.EmailRequest;
+import ru.nsu.bankbackend.config.Security.DTO.PasswordResetRequest;
 import ru.nsu.bankbackend.service.AuthService;
+import ru.nsu.bankbackend.service.EmailService;
 
 @RestController
 @RequestMapping("/")
 public class AuthController {
-
     @Autowired
     private AuthService authService;
+    @Autowired
+    private EmailService emailService;
 
     @PostMapping("/signup")
     public ResponseEntity<AuthenticationResponse> signUp(@RequestBody AuthenticationRequest request){
@@ -22,6 +27,25 @@ public class AuthController {
     public ResponseEntity<AuthenticationResponse> signIn(@RequestBody AuthenticationRequest request){
         return ResponseEntity.ok(authService.signIn(request));
     }
+    @PostMapping("/request-reset-password")
+    public ResponseEntity<?> requestResetPassword(@RequestBody EmailRequest emailRequest) {
+        boolean result = authService.requestPasswordReset(emailRequest.getEmail());
+        if (result) {
+            return ResponseEntity.ok().build();
+        } else {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+        }
+    }
+    @PostMapping("/reset-password")
+    public ResponseEntity<?> resetPassword(@RequestParam("token") String token, @RequestBody PasswordResetRequest passwordResetRequest) {
+        try {
+            authService.updatePassword(token, passwordResetRequest.getNewPassword());
+            return ResponseEntity.ok().build();
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body("Invalid token or password could not be updated.");
+        }
+    }
+
     @PostMapping("/refresh")
     public ResponseEntity<AuthenticationResponse> refreshToken(@RequestBody AuthenticationRequest request){
         return ResponseEntity.ok(authService.refreshToken(request));

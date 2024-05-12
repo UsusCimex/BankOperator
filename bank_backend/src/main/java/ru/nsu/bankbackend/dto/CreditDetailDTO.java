@@ -17,4 +17,5 @@ public class CreditDetailDTO {
     private LocalDate endDate;
     private Double mandatoryPaymentAmount;
     private LocalDate mandatoryPaymentDate;
+    private Double mandatoryPenalty;
 }

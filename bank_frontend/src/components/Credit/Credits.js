@@ -206,7 +206,7 @@ function Credits() {
           <div className="form-input-group">
             <label htmlFor="startDate">Start Date</label>
             <input
-              type="datetime-local"
+              type="date"
               id="startDate"
               name="startDate"
               value={filters.startDate}
@@ -217,7 +217,7 @@ function Credits() {
           <div className="form-input-group">
             <label htmlFor="endDate">End Date</label>
             <input
-              type="datetime-local"
+              type="date"
               id="endDate"
               name="endDate"
               value={filters.endDate}

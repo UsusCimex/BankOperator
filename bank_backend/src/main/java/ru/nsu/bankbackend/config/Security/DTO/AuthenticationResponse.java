@@ -1,4 +1,4 @@
-package ru.nsu.bankbackend.config.Security;
+package ru.nsu.bankbackend.config.Security.DTO;
 
 import lombok.Data;
 

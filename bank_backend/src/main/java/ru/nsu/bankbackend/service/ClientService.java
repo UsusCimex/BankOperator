@@ -52,7 +52,7 @@ public class ClientService {
 
         if (client.getCredits() != null && !client.getCredits().isEmpty()) {
             Credit latestCredit = client.getCredits().stream()
-                    .max(Comparator.comparing(Credit::getStartDate))
+                    .max(Comparator.comparing(Credit::getId))
                     .orElse(null);
 
             dto.setCreditStatus(latestCredit.getStatus().toString());
