@@ -66,7 +66,7 @@ public class PaymentService {
         MandatoryPayment mandatoryPayment = credit.getMandatoryPayment();
         Penalty penalty = mandatoryPayment.getPenalty();
 
-        Double realAmount = payment.getAmount() / (1.0 + tariff.getInterestRate() / 100.0);
+        Double realAmount = payment.getAmount() / (1.0 + payment.getPaymentType().getCommission() / 100.0);
 
         if (penalty != null) {
             Double remainingAmount = realAmount - mandatoryPayment.getPenalty().getAmount();

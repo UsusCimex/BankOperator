@@ -53,6 +53,8 @@ public class CreditService {
         dto.setClientName(credit.getClient().getName());
         dto.setTariffId(credit.getTariff().getId());
         dto.setTariffName(credit.getTariff().getName());
+        dto.setMandatoryPaymentAmount(credit.getMandatoryPayment().getAmount());
+        dto.setMandatoryPaymentDate(credit.getMandatoryPayment().getDueDate());
         return dto;
     }
 

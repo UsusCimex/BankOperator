@@ -15,4 +15,6 @@ public class CreditDetailDTO {
     private String status;
     private LocalDate startDate;
     private LocalDate endDate;
+    private Double mandatoryPaymentAmount;
+    private LocalDate mandatoryPaymentDate;
 }
