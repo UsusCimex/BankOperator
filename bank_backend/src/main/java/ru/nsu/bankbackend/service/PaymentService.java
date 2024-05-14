@@ -37,7 +37,7 @@ public class PaymentService {
     @Autowired
     private PenaltyRepository penaltyRepository;
 
-    private PaymentDetailDTO convertToDTO(Payment payment) {
+    public PaymentDetailDTO convertToDTO(Payment payment) {
         PaymentDetailDTO dto = new PaymentDetailDTO();
         dto.setId(payment.getId());
         dto.setCreditId(payment.getCredit().getId());
@@ -60,6 +60,7 @@ public class PaymentService {
         return payment;
     }
 
+    @Transactional
     public void processPayment(Payment payment) {
         Credit credit = payment.getCredit();
         Tariff tariff = credit.getTariff();

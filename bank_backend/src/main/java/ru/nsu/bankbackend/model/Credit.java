@@ -8,6 +8,7 @@ import jakarta.validation.constraints.Positive;
 import lombok.Data;
 
 import java.time.LocalDate;
+import java.util.List;
 
 @Data
 @Entity
@@ -52,6 +53,9 @@ public class Credit {
 
     @OneToOne(mappedBy = "credit", fetch = FetchType.LAZY)
     private MandatoryPayment mandatoryPayment;
+
+    @OneToMany(fetch = FetchType.EAGER, mappedBy = "credit")
+    private List<Payment> payments;
 
     public static Status convertStringToStatus(String statusStr) {
         try {

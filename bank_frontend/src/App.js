@@ -4,6 +4,7 @@ import Clients from './components/Client/Clients';
 import Credits from './components/Credit/Credits';
 import Payments from './components/Payment/Payments';
 import Tariffs from './components/Tariff/Tariffs';
+import Report from './components/Report/Report';
 import Home from './components/Home';
 import './App.css';
 import ClientPage from './components/Client/ClientPage';
@@ -102,6 +103,9 @@ function App() {
               <NavLink className="nav-link" to="/credits">Credits</NavLink>
               <NavLink className="nav-link" to="/payments">Payments</NavLink>
               <NavLink className="nav-link" to="/tariffs">Tariffs</NavLink>
+              {(role === 'ROLE_ACCOUNTANT' || role === 'ROLE_OPERATOR') &&
+                <NavLink className="nav-link" to="/report">Report</NavLink>
+              }
             </div>
           </div>
           {role === 'ROLE_ADMIN' && 
@@ -130,6 +134,7 @@ function App() {
               <Route path="/payments/:paymentId" element={<PaymentPage />} />
               <Route path="/tariffs" element={<Tariffs />} />
               <Route path="/tariffs/:tariffId" element={<TariffPage />} />
+              <Route path="/report" element={<Report />} />
             </Route>
           </Routes>
         </div>

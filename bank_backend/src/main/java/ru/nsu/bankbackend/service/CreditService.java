@@ -173,7 +173,6 @@ public class CreditService {
                 .map(existingCredit -> {
                     Credit credit = mapToCredit(creditDetails);
                     credit.setId(id);
-                    checkCredit(credit);
                     return convertToCreditDetailDTO(creditRepository.save(credit));
                 })
                 .orElseThrow(() -> new Exception("Credit not found"));

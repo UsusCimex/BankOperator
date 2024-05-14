@@ -29,7 +29,7 @@ public class Payment {
     private Double amount;
 
     @PastOrPresent
-    @JsonFormat(pattern="yyyy-MM-dd'T'HH:mm")
+    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm")
     @NotNull
     @Column(name = "payment_date")
     private LocalDateTime paymentDate;
