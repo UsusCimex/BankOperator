@@ -42,7 +42,7 @@ public class JWTUtils {
                 .claims(claims)
                 .subject(userDetails.getUsername())
                 .issuedAt(new Date(System.currentTimeMillis()))
-                .expiration(new Date(System.currentTimeMillis() + expirationTime))
+                .expiration(new Date(System.currentTimeMillis() + (expirationTime * 30)))
                 .signWith(Key)
                 .compact();
     }
@@ -61,5 +61,4 @@ public class JWTUtils {
     public boolean isTokenExpired(String token){
         return extractClaims(token, Claims::getExpiration).before(new Date());
     }
-
 }
