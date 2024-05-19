@@ -1,26 +1,22 @@
 package ru.nsu.bankbackend.controller;
 
-import jakarta.persistence.OneToMany;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.server.ResponseStatusException;
 import ru.nsu.bankbackend.model.PaymentType;
-import ru.nsu.bankbackend.repository.PaymentTypeRepository;
-import ru.nsu.bankbackend.service.PaymentService;
 import ru.nsu.bankbackend.service.PaymentTypeService;
 
 import java.util.Collections;
 import java.util.List;
 
 @RestController
+@AllArgsConstructor
 @RequestMapping("/api/paymentTypes")
 public class PaymentTypeController {
-    @Autowired
     private PaymentTypeService paymentTypeService;
 
     @GetMapping

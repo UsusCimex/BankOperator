@@ -1,6 +1,6 @@
 package ru.nsu.bankbackend.controller;
 
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -12,10 +12,10 @@ import ru.nsu.bankbackend.service.MandatoryPaymentService;
 import java.util.Collections;
 
 @RestController
+@AllArgsConstructor
 @RequestMapping("/api/mandatoryPayments")
 public class MandatoryPaymentController {
-    @Autowired
-    private MandatoryPaymentService mandatoryPaymentService;
+    private final MandatoryPaymentService mandatoryPaymentService;
 
     @GetMapping
     public ResponseEntity<?> getMandatoryPayments() {

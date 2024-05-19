@@ -1,6 +1,6 @@
 package ru.nsu.bankbackend.controller;
 
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.AllArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -18,10 +18,10 @@ import java.util.Date;
 import java.util.List;
 
 @RestController
+@AllArgsConstructor
 @RequestMapping("/clients")
 public class ClientController {
-    @Autowired
-    private ClientService clientService;
+    private final ClientService clientService;
 
     @GetMapping("/all")
     @PreAuthorize("hasAnyRole('ADMIN', 'TARIFF_MANAGER', 'OPERATOR','ACCOUNTANT')")

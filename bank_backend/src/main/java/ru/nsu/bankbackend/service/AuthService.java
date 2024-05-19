@@ -1,7 +1,7 @@
 package ru.nsu.bankbackend.service;
 
 import jakarta.transaction.Transactional;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.AllArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -16,17 +16,13 @@ import java.util.HashMap;
 import java.util.UUID;
 
 @Service
+@AllArgsConstructor
 public class AuthService {
-    @Autowired
-    private UserRepository userRepository;
-    @Autowired
-    private JWTUtils jwtUtils;
-    @Autowired
-    private PasswordEncoder passwordEncoder;
-    @Autowired
-    private AuthenticationManager authenticationManager;
-    @Autowired
-    private EmailService emailService;
+    private final UserRepository userRepository;
+    private final JWTUtils jwtUtils;
+    private final PasswordEncoder passwordEncoder;
+    private final AuthenticationManager authenticationManager;
+    private final EmailService emailService;
 
     @Transactional
     public AuthenticationResponse signUp(AuthenticationRequest registrationRequest){

@@ -7,7 +7,7 @@ import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import jakarta.persistence.TypedQuery;
 import jakarta.transaction.Transactional;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.AllArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.jpa.domain.Specification;
@@ -24,15 +24,12 @@ import ru.nsu.bankbackend.repository.TariffRepository;
 import java.util.*;
 
 @Service
+@AllArgsConstructor
 public class CreditService {
-    @Autowired
-    private CreditRepository creditRepository;
-    @Autowired
-    private ClientRepository clientRepository;
-    @Autowired
-    private TariffRepository tariffRepository;
-    @Autowired
-    private MandatoryPaymentRepository mandatoryPaymentRepository;
+    private final CreditRepository creditRepository;
+    private final ClientRepository clientRepository;
+    private final TariffRepository tariffRepository;
+    private final MandatoryPaymentRepository mandatoryPaymentRepository;
 
     @PersistenceContext
     private EntityManager entityManager;

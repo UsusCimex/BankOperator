@@ -1,6 +1,6 @@
 package ru.nsu.bankbackend.controller;
 
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.AllArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
@@ -14,11 +14,10 @@ import java.util.Collections;
 import java.util.List;
 
 @RestController
+@AllArgsConstructor
 @RequestMapping("/tariffs")
 public class TariffController {
-
-    @Autowired
-    private TariffService tariffService;
+    private final TariffService tariffService;
 
     @GetMapping("/all")
     @PreAuthorize("hasAnyRole('ADMIN', 'TARIFF_MANAGER', 'OPERATOR','ACCOUNTANT')")

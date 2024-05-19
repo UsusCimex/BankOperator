@@ -1,8 +1,7 @@
 package ru.nsu.bankbackend.service;
 
 import jakarta.transaction.Transactional;
-import lombok.SneakyThrows;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.AllArgsConstructor;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import ru.nsu.bankbackend.model.Penalty;
@@ -12,9 +11,9 @@ import java.util.List;
 import java.util.Optional;
 
 @Service
+@AllArgsConstructor
 public class PenaltyService {
-    @Autowired
-    private PenaltyRepository penaltyRepository;
+    private final PenaltyRepository penaltyRepository;
 
     @Transactional
     public List<Penalty> findAll() {

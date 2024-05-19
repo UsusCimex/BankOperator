@@ -1,6 +1,6 @@
 package ru.nsu.bankbackend.controller;
 
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -9,15 +9,12 @@ import ru.nsu.bankbackend.config.Security.DTO.AuthenticationResponse;
 import ru.nsu.bankbackend.config.Security.DTO.EmailRequest;
 import ru.nsu.bankbackend.config.Security.DTO.PasswordResetRequest;
 import ru.nsu.bankbackend.service.AuthService;
-import ru.nsu.bankbackend.service.EmailService;
 
 @RestController
 @RequestMapping("/")
+@AllArgsConstructor
 public class AuthController {
-    @Autowired
-    private AuthService authService;
-    @Autowired
-    private EmailService emailService;
+    private final AuthService authService;
 
     @PostMapping("/signup")
     public ResponseEntity<AuthenticationResponse> signUp(@RequestBody AuthenticationRequest request){

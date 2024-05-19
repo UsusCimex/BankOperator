@@ -1,7 +1,7 @@
 package ru.nsu.bankbackend.service;
 
 import jakarta.transaction.Transactional;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.AllArgsConstructor;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import ru.nsu.bankbackend.model.MandatoryPayment;
@@ -13,9 +13,9 @@ import java.util.List;
 import java.util.Optional;
 
 @Service
+@AllArgsConstructor
 public class MandatoryPaymentService {
-    @Autowired
-    private MandatoryPaymentRepository mandatoryPaymentRepository;
+    private final MandatoryPaymentRepository mandatoryPaymentRepository;
 
     @Transactional
     public List<MandatoryPayment> getAllMandatoryPayments() {

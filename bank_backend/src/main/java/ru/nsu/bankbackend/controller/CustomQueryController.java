@@ -1,6 +1,6 @@
 package ru.nsu.bankbackend.controller;
 
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -11,11 +11,10 @@ import java.util.HashMap;
 import java.util.Map;
 
 @RestController
+@AllArgsConstructor
 @RequestMapping("/api/custom")
 public class CustomQueryController {
-
-    @Autowired
-    private CustomQueryService customQueryService;
+    private final CustomQueryService customQueryService;
 
     @PostMapping("/query")
     @PreAuthorize("hasRole('ADMIN')")

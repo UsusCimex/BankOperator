@@ -4,10 +4,9 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.persistence.EntityManager;
-import jakarta.persistence.PersistenceContext;
 import jakarta.persistence.TypedQuery;
 import jakarta.transaction.Transactional;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.AllArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.jpa.domain.Specification;
@@ -23,19 +22,14 @@ import java.util.List;
 import java.util.Optional;
 
 @Service
+@AllArgsConstructor
 public class PaymentService {
-    @Autowired
-    private PaymentRepository paymentRepository;
-    @PersistenceContext
-    private EntityManager entityManager;
-    @Autowired
-    private CreditRepository creditRepository;
-    @Autowired
-    private PaymentTypeRepository paymentTypeRepository;
-    @Autowired
-    private MandatoryPaymentRepository mandatoryPaymentRepository;
-    @Autowired
-    private PenaltyRepository penaltyRepository;
+    private final PaymentRepository paymentRepository;
+    private final EntityManager entityManager;
+    private final CreditRepository creditRepository;
+    private final PaymentTypeRepository paymentTypeRepository;
+    private final MandatoryPaymentRepository mandatoryPaymentRepository;
+    private final PenaltyRepository penaltyRepository;
 
     public PaymentDetailDTO convertToDTO(Payment payment) {
         PaymentDetailDTO dto = new PaymentDetailDTO();

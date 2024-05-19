@@ -1,6 +1,6 @@
 package ru.nsu.bankbackend.controller;
 
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.AllArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -10,7 +10,6 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import ru.nsu.bankbackend.dto.PaymentDTO;
 import ru.nsu.bankbackend.dto.PaymentDetailDTO;
-import ru.nsu.bankbackend.model.Payment;
 import ru.nsu.bankbackend.service.PaymentService;
 
 import java.util.Collections;
@@ -18,9 +17,9 @@ import java.util.Date;
 import java.util.List;
 
 @RestController
+@AllArgsConstructor
 @RequestMapping("/payments")
 public class PaymentController {
-    @Autowired
     private PaymentService paymentService;
 
     @GetMapping("/all")

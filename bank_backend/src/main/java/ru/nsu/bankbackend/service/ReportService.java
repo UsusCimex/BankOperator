@@ -1,5 +1,6 @@
 package ru.nsu.bankbackend.service;
 
+import lombok.AllArgsConstructor;
 import ru.nsu.bankbackend.dto.CreditReportDTO;
 import ru.nsu.bankbackend.model.Credit;
 import ru.nsu.bankbackend.model.Payment;
@@ -13,14 +14,10 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Service
+@AllArgsConstructor
 public class ReportService {
     private final CreditRepository creditRepository;
     private final PaymentRepository paymentRepository;
-
-    public ReportService(CreditRepository creditRepository, PaymentRepository paymentRepository) {
-        this.creditRepository = creditRepository;
-        this.paymentRepository = paymentRepository;
-    }
 
     public List<CreditReportDTO> generateReport(LocalDate from, LocalDate to) {
         List<Credit> credits = creditRepository.findAllCreditsBetweenDates(from, to);

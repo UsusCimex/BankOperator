@@ -1,8 +1,7 @@
 package ru.nsu.bankbackend.service;
 
 import jakarta.transaction.Transactional;
-import lombok.SneakyThrows;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 import ru.nsu.bankbackend.model.PaymentType;
 import ru.nsu.bankbackend.repository.PaymentTypeRepository;
@@ -11,9 +10,9 @@ import java.util.List;
 import java.util.Optional;
 
 @Service
+@AllArgsConstructor
 public class PaymentTypeService {
-    @Autowired
-    private PaymentTypeRepository paymentTypeRepository;
+    private final PaymentTypeRepository paymentTypeRepository;
 
     @Transactional
     public List<PaymentType> getAllPaymentTypes() {
