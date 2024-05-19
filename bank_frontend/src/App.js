@@ -34,7 +34,7 @@ function App() {
       sessionStorage.removeItem('token');
       sessionStorage.removeItem('role');
     }
-  }, [isAuthenticated])
+  }, [])
 
   useEffect(() => {
     const timer = setTimeout(() => {
