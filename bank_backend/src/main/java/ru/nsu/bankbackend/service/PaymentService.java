@@ -99,6 +99,12 @@ public class PaymentService {
                 break;
             }
         }
+
+        if (mandatoryPayment.getLoanTerm() == 0) {
+            credit.setStatus(Credit.Status.CLOSED);
+            mandatoryPaymentRepository.delete(mandatoryPayment);
+            creditRepository.save(credit);
+        }
     }
 
     @Transactional

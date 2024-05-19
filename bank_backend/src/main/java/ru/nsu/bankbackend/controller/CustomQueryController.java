@@ -4,10 +4,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import ru.nsu.bankbackend.service.CustomQueryService;
 
 import java.util.HashMap;
@@ -16,6 +13,7 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/custom")
 public class CustomQueryController {
+
     @Autowired
     private CustomQueryService customQueryService;
 
@@ -23,11 +21,9 @@ public class CustomQueryController {
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<?> executeCustomQuery(@RequestBody String queryJson) {
         try {
-            int count = customQueryService.execute(queryJson);
-            Map<String, Object> response = new HashMap<>();
-            response.put("message", "Запрос выполнен успешно.");
-            response.put("affectedRows", count);
-            return ResponseEntity.ok().body(response);
+            Map<String, Object> result = customQueryService.execute(queryJson);
+            result.put("message", "Запрос выполнен успешно.");
+            return ResponseEntity.ok().body(result);
         } catch (Exception e) {
             Map<String, String> errorMap = new HashMap<>();
             errorMap.put("error", e.getMessage());

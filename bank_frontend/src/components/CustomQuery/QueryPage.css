@@ -1,0 +1,72 @@
+.react-codemirror2 > .CodeMirror:first-child { display: none; }
+.query-page {
+    font-family: Arial, sans-serif;
+    padding: 20px;
+  }
+  
+  .query-page h2 {
+    margin-bottom: 20px;
+  }
+  
+  .query-page form {
+    margin-bottom: 20px;
+  }
+  
+  .query-input-wrapper {
+    width: 100%;
+    min-height: 50px;
+  }
+  
+  .query-page button {
+    padding: 10px 20px;
+    font-size: 16px;
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+  }
+  
+  .query-page button:hover {
+    background-color: #45a049;
+  }
+  
+  .query-result {
+    margin-top: 20px;
+  }
+  
+  .query-result table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+  
+  .query-result th, .query-result td {
+    border: 1px solid #ddd;
+    padding: 8px;
+  }
+  
+  .query-result th {
+    background-color: #f2f2f2;
+    text-align: left;
+  }
+  
+  .query-result tr:nth-child(even) {
+    background-color: #f9f9f9;
+  }
+  
+  .query-result tr:hover {
+    background-color: #ddd;
+  }
+  
+  .query-error {
+    color: red;
+    margin-top: 20px;
+  }
+  
+  .CodeMirror {
+    height: auto;
+    background: #2b2b2b; /* Новый цвет фона для редактора */
+    color: #ffffff; /* Цвет текста */
+    font-size: 16px;
+  }
+  

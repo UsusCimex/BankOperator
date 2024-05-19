@@ -41,20 +41,20 @@ public class ClientSpecification {
 
     public static Specification<Client> hasCreditStatus(Credit.Status creditStatus) {
         return (root, query, criteriaBuilder) -> {
-            // Подзапрос для получения максимальной даты кредита каждого клиента
-            Subquery<Date> subquery = query.subquery(Date.class);
+            // Подзапрос для получения максимального id кредита каждого клиента
+            Subquery<Long> subquery = query.subquery(Long.class);
             Root<Credit> creditSubRoot = subquery.from(Credit.class);
-            subquery.select(criteriaBuilder.greatest(creditSubRoot.<Date>get("startDate")))
+            subquery.select(criteriaBuilder.greatest(creditSubRoot.<Long>get("id")))
                     .where(criteriaBuilder.equal(creditSubRoot.get("client").get("id"), root.get("id")));
 
             // Основной запрос, присоединяем список кредитов
             Join<Client, Credit> creditClientJoin = root.join("credits", JoinType.INNER);
 
-            // Условие, сравнивающее даты кредитов с максимальной датой и проверяющее статус
+            // Условие, сравнивающее id кредитов с максимальным id и проверяющее статус
             Predicate statusPredicate = criteriaBuilder.equal(creditClientJoin.get("status"), creditStatus);
-            Predicate datePredicate = criteriaBuilder.equal(creditClientJoin.get("startDate"), subquery);
+            Predicate idPredicate = criteriaBuilder.equal(creditClientJoin.get("id"), subquery);
 
-            return criteriaBuilder.and(statusPredicate, datePredicate);
+            return criteriaBuilder.and(statusPredicate, idPredicate);
         };
     }
 
