@@ -145,7 +145,11 @@ public class PaymentService {
     }
 
     @Transactional
-    public void deleteById(Long id) {
+    public void deleteById(Long id) throws Exception {
+        Payment payment =  paymentRepository.findById(id).orElseThrow(() -> new Exception("Платёж не найден."));
+        MandatoryPayment mandatoryPayment = payment.getCredit().getMandatoryPayment();
+        mandatoryPayment.setAmount(mandatoryPayment.getAmount() + payment.getAmount());
+        mandatoryPaymentRepository.save(mandatoryPayment);
         paymentRepository.deleteById(id);
     }
 
@@ -153,9 +157,15 @@ public class PaymentService {
     public PaymentDetailDTO update(Long id, PaymentDTO paymentDetails) throws Exception {
         return paymentRepository.findById(id)
                 .map(existingPayment -> {
+                    MandatoryPayment mandatoryPayment = existingPayment.getCredit().getMandatoryPayment();
+                    mandatoryPayment.setAmount(mandatoryPayment.getAmount() + existingPayment.getAmount());
+                    mandatoryPaymentRepository.save(mandatoryPayment);
+
                     Payment updatedPayment = mapToPayment(paymentDetails);
                     updatedPayment.setId(id);
-                    return convertToDTO(paymentRepository.save(existingPayment));
+                    Payment savedPayment = paymentRepository.save(updatedPayment);
+                    processPayment(savedPayment);
+                    return convertToDTO(savedPayment);
                 })
                 .orElseThrow(() -> new Exception("Платёж не найден."));
     }
