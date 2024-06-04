@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
 import jakarta.persistence.TypedQuery;
 import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
@@ -25,11 +26,14 @@ import java.util.Optional;
 @AllArgsConstructor
 public class PaymentService {
     private final PaymentRepository paymentRepository;
-    private final EntityManager entityManager;
     private final CreditRepository creditRepository;
     private final PaymentTypeRepository paymentTypeRepository;
     private final MandatoryPaymentRepository mandatoryPaymentRepository;
     private final PenaltyRepository penaltyRepository;
+    private final RemainingDebtRepository remainingDebtRepository;
+
+    @PersistenceContext
+    private EntityManager entityManager;
 
     public PaymentDetailDTO convertToDTO(Payment payment) {
         PaymentDetailDTO dto = new PaymentDetailDTO();
@@ -47,10 +51,12 @@ public class PaymentService {
     public Payment mapToPayment(PaymentDTO paymentDTO) {
         Payment payment = new Payment();
         payment.setPaymentDate(paymentDTO.getPaymentDate());
-        PaymentType paymentType = paymentTypeRepository.findById(paymentDTO.getPaymentTypeId()).orElseThrow(() -> new RuntimeException("Payment type not found"));
+        PaymentType paymentType = paymentTypeRepository.findById(paymentDTO.getPaymentTypeId())
+                .orElseThrow(() -> new RuntimeException("Payment type not found"));
         payment.setPaymentType(paymentType);
         payment.setAmount(paymentDTO.getAmount());
-        payment.setCredit(creditRepository.findById(paymentDTO.getCreditId()).orElseThrow(() -> new RuntimeException("Credit not found")));
+        payment.setCredit(creditRepository.findById(paymentDTO.getCreditId())
+                .orElseThrow(() -> new RuntimeException("Credit not found")));
         return payment;
     }
 
@@ -60,22 +66,28 @@ public class PaymentService {
         Tariff tariff = credit.getTariff();
         MandatoryPayment mandatoryPayment = credit.getMandatoryPayment();
         Penalty penalty = mandatoryPayment.getPenalty();
+        RemainingDebt remainingDebt = credit.getRemainingDebt();
 
         Double realAmount = payment.getAmount() / (1.0 + payment.getPaymentType().getCommission() / 100.0);
 
         if (penalty != null) {
-            Double remainingAmount = realAmount - mandatoryPayment.getPenalty().getAmount();
+            Double remainingAmount = realAmount - penalty.getAmount();
             if (remainingAmount > 0.0) {
                 penaltyRepository.delete(penalty);
                 mandatoryPayment.setAmount(mandatoryPayment.getAmount() - remainingAmount);
-                mandatoryPaymentRepository.save(mandatoryPayment);
+                mandatoryPayment.setPenalty(null);
             } else {
                 penalty.setAmount(-remainingAmount);
                 penaltyRepository.save(penalty);
             }
         } else {
             mandatoryPayment.setAmount(mandatoryPayment.getAmount() - realAmount);
-            mandatoryPaymentRepository.save(mandatoryPayment);
+        }
+        mandatoryPaymentRepository.save(mandatoryPayment);
+
+        if (remainingDebt != null) {
+            remainingDebt.setRemainingAmount(remainingDebt.getRemainingAmount() - realAmount);
+            remainingDebtRepository.save(remainingDebt);
         }
 
         while (mandatoryPayment.getAmount() <= 0.0) {
@@ -86,17 +98,15 @@ public class PaymentService {
                 mandatoryPayment.setAmount(newAmount + mandatoryPayment.getAmount());
                 mandatoryPayment.setDueDate(mandatoryPayment.getDueDate().plusMonths(1));
                 mandatoryPaymentRepository.save(mandatoryPayment);
-            } else {
-                credit.setStatus(Credit.Status.CLOSED);
-                mandatoryPaymentRepository.delete(mandatoryPayment);
-                creditRepository.save(credit);
-                break;
             }
         }
 
-        if (mandatoryPayment.getLoanTerm() == 0) {
+        if (remainingDebt != null && remainingDebt.getRemainingAmount() <= 0.0) {
             credit.setStatus(Credit.Status.CLOSED);
+            remainingDebtRepository.delete(remainingDebt);
+            credit.setRemainingDebt(null);
             mandatoryPaymentRepository.delete(mandatoryPayment);
+            credit.setMandatoryPayment(null);
             creditRepository.save(credit);
         }
     }
@@ -146,10 +156,10 @@ public class PaymentService {
 
     @Transactional
     public void deleteById(Long id) throws Exception {
-        Payment payment =  paymentRepository.findById(id).orElseThrow(() -> new Exception("Платёж не найден."));
-        MandatoryPayment mandatoryPayment = payment.getCredit().getMandatoryPayment();
-        mandatoryPayment.setAmount(mandatoryPayment.getAmount() + payment.getAmount());
-        mandatoryPaymentRepository.save(mandatoryPayment);
+        Payment payment = paymentRepository.findById(id).orElseThrow(() -> new Exception("Платёж не найден."));
+        RemainingDebt remainingDebt = payment.getCredit().getRemainingDebt();
+        remainingDebt.setRemainingAmount(remainingDebt.getRemainingAmount() + payment.getAmount());
+        remainingDebtRepository.save(remainingDebt);
         paymentRepository.deleteById(id);
     }
 
@@ -183,12 +193,10 @@ public class PaymentService {
         String query = queryNode.asText();
         String testQuery = query.toLowerCase();
 
-        // Базовая проверка FROM client
         if (!testQuery.contains("select * from payment")) {
             throw new IllegalArgumentException("Запрос должен содержать SELECT * FROM payment.");
         }
 
-        // Проверка на запрещённые выражения для безопасности
         if (testQuery.contains("join") || testQuery.contains("group by") || testQuery.contains(";") || testQuery.contains(",")) {
             throw new IllegalArgumentException("JOIN, GROUP BY и использование ';' и ',' не разрешены.");
         }

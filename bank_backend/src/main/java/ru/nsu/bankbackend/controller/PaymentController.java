@@ -96,7 +96,7 @@ public class PaymentController {
     @PreAuthorize("hasAnyRole('ADMIN', 'OPERATOR')")
     public ResponseEntity<?> deletePayment(
             @PathVariable Long id
-    ) {
+    ) throws Exception {
         paymentService.deleteById(id);
         return ResponseEntity.ok().build();
     }

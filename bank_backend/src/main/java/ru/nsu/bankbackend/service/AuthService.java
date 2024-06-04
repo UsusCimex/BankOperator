@@ -25,7 +25,7 @@ public class AuthService {
     private final EmailService emailService;
 
     @Transactional
-    public AuthenticationResponse signUp(AuthenticationRequest registrationRequest){
+    public AuthenticationResponse signUp(AuthenticationRequest registrationRequest) {
         AuthenticationResponse response = new AuthenticationResponse();
         User user = new User();
         user.setEmail(registrationRequest.getEmail());

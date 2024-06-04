@@ -92,11 +92,16 @@ public class CreditController {
 
     @DeleteMapping("/{id}")
     @PreAuthorize("hasAnyRole('ADMIN', 'OPERATOR')")
-    public ResponseEntity<?> deleteCredit(
+    public ResponseEntity<Void> deleteCredit(
             @PathVariable Long id
     ) {
-        creditService.deleteById(id);
-        return ResponseEntity.ok().build();
+        try {
+            creditService.deleteCredit(id);
+            return ResponseEntity.noContent().build();
+        } catch (Exception e) {
+            System.err.println(e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
     }
 
     @PostMapping("/customQuery")

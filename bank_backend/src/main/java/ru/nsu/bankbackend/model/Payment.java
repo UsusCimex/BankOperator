@@ -35,7 +35,7 @@ public class Payment {
     private LocalDateTime paymentDate;
 
     @NotNull
-    @OneToOne
+    @ManyToOne
     @JoinColumn(name = "payment_type_id", referencedColumnName = "payment_type_id")
     private PaymentType paymentType;
 }

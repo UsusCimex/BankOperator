@@ -11,15 +11,13 @@ import lombok.AllArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import ru.nsu.bankbackend.cpecification.CreditSpecification;
 import ru.nsu.bankbackend.dto.CreditDTO;
 import ru.nsu.bankbackend.dto.CreditDetailDTO;
 import ru.nsu.bankbackend.model.*;
-import ru.nsu.bankbackend.repository.ClientRepository;
-import ru.nsu.bankbackend.repository.CreditRepository;
-import ru.nsu.bankbackend.repository.MandatoryPaymentRepository;
-import ru.nsu.bankbackend.repository.TariffRepository;
+import ru.nsu.bankbackend.repository.*;
 
 import java.util.*;
 
@@ -30,6 +28,8 @@ public class CreditService {
     private final ClientRepository clientRepository;
     private final TariffRepository tariffRepository;
     private final MandatoryPaymentRepository mandatoryPaymentRepository;
+    private final RemainingDebtRepository remainingDebtRepository;
+    private final PaymentRepository paymentRepository;
 
     @PersistenceContext
     private EntityManager entityManager;
@@ -38,6 +38,12 @@ public class CreditService {
         CreditDetailDTO dto = new CreditDetailDTO();
         dto.setId(credit.getId());
         dto.setAmount(credit.getAmount());
+        RemainingDebt remainingDebt = credit.getRemainingDebt();
+        if (remainingDebt != null) {
+            dto.setRemainingAmount(remainingDebt.getRemainingAmount());
+        } else {
+            dto.setRemainingAmount(0.0); // Или любое другое значение по умолчанию
+        }
         dto.setStatus(credit.getStatus().toString());
         dto.setStartDate(credit.getStartDate());
         dto.setEndDate(credit.getEndDate());
@@ -84,6 +90,58 @@ public class CreditService {
     }
 
     @Transactional
+    public CreditDetailDTO save(CreditDTO creditDetail) {
+        Credit credit = mapToCredit(creditDetail);
+        checkCredit(credit);
+        Credit savedCredit = creditRepository.save(credit);
+        createInitialMandatoryPayment(savedCredit);
+        createInitialRemainingDebt(savedCredit); // Создаем и сохраняем RemainingDebt
+        return convertToCreditDetailDTO(savedCredit);
+    }
+
+    private void createInitialMandatoryPayment(Credit credit) {
+        if (credit.getStatus() == Credit.Status.ACTIVE) {
+            MandatoryPayment payment = new MandatoryPayment();
+            Tariff tariff = credit.getTariff();
+            payment.setCredit(credit);
+            Double initialAmount = credit.getAmount() / tariff.getLoanTerm() +
+                    credit.getAmount() * tariff.getInterestRate() / (tariff.getLoanTerm() * 100.0);
+            payment.setAmount(initialAmount);
+            payment.setDueDate(credit.getStartDate().plusMonths(1));
+            payment.setLoanTerm(tariff.getLoanTerm());
+            mandatoryPaymentRepository.save(payment);
+        }
+    }
+
+    private void createInitialRemainingDebt(Credit credit) {
+        if (credit.getStatus() == Credit.Status.ACTIVE) {
+            RemainingDebt remainingDebt = new RemainingDebt();
+            remainingDebt.setCredit(credit);
+            remainingDebt.setRemainingAmount(credit.getAmount());
+            remainingDebtRepository.save(remainingDebt);
+            credit.setRemainingDebt(remainingDebt); // Связываем RemainingDebt с Credit
+            creditRepository.save(credit);
+        }
+    }
+
+    private void checkCredit(Credit credit) {
+        if (credit.getAmount() > credit.getTariff().getMaxAmount()) {
+            throw new IllegalArgumentException("Requested amount exceeds the maximum allowed by the Tariff");
+        }
+
+        List<Credit> currentCredits = creditRepository.findByClientId(credit.getClient().getId()).stream().toList();
+
+        long activeOrExpiredCount = currentCredits.stream()
+                .filter(c -> c.getStatus() == Credit.Status.ACTIVE || c.getStatus() == Credit.Status.EXPIRED)
+                .count();
+
+        if ((credit.getStatus() == Credit.Status.ACTIVE || credit.getStatus() == Credit.Status.EXPIRED) &&
+                activeOrExpiredCount >= 1) {
+            throw new IllegalStateException("Client cannot have more than one ACTIVE or EXPIRED credit.");
+        }
+    }
+
+    @Transactional
     public Page<CreditDetailDTO> findAll(PageRequest pageRequest) {
         return creditRepository.findAll(pageRequest).map(this::convertToCreditDetailDTO);
     }
@@ -124,46 +182,6 @@ public class CreditService {
         return creditRepository.findByClientId(clientId).stream().map(this::convertToCreditDetailDTO).toList();
     }
 
-    private void checkCredit(Credit credit) {
-        if (credit.getAmount() > credit.getTariff().getMaxAmount()) {
-            throw new IllegalArgumentException("Requested amount exceeds the maximum allowed by the Tariff");
-        }
-
-        List<Credit> currentCredits = creditRepository.findByClientId(credit.getClient().getId()).stream().toList();
-
-        long activeOrExpiredCount = currentCredits.stream()
-                .filter(c -> c.getStatus() == Credit.Status.ACTIVE || c.getStatus() == Credit.Status.EXPIRED)
-                .count();
-
-        if ((credit.getStatus() == Credit.Status.ACTIVE || credit.getStatus() == Credit.Status.EXPIRED) &&
-                activeOrExpiredCount >= 1) {
-            throw new IllegalStateException("Client cannot have more than one ACTIVE or EXPIRED credit.");
-        }
-    }
-
-    public void createInitialMandatoryPayment(Credit credit) {
-        if (credit.getStatus() == Credit.Status.ACTIVE) {
-            MandatoryPayment payment = new MandatoryPayment();
-            Tariff tariff = credit.getTariff();
-            payment.setCredit(credit);
-            Double initialAmount = credit.getAmount() / tariff.getLoanTerm() +
-                    credit.getAmount() * tariff.getInterestRate() / (tariff.getLoanTerm() * 100.0);
-            payment.setAmount(initialAmount);
-            payment.setDueDate(credit.getStartDate().plusMonths(1));
-            payment.setLoanTerm(tariff.getLoanTerm());
-            mandatoryPaymentRepository.save(payment);
-        }
-    }
-
-    @Transactional
-    public CreditDetailDTO save(CreditDTO creditDetail) {
-        Credit credit = mapToCredit(creditDetail);
-        checkCredit(credit);
-        Credit savedCredit = creditRepository.save(credit);
-        createInitialMandatoryPayment(savedCredit);
-        return convertToCreditDetailDTO(savedCredit);
-    }
-
     @Transactional
     public CreditDetailDTO update(Long id, CreditDTO creditDetails) throws Exception {
         return creditRepository.findById(id)
@@ -176,8 +194,26 @@ public class CreditService {
     }
 
     @Transactional
-    public void deleteById(Long id) {
-        creditRepository.deleteById(id);
+    public void deleteCredit(Long id) throws Exception {
+        entityManager.createQuery("DELETE FROM RemainingDebt rd WHERE rd.credit.id = :id")
+                .setParameter("id", id)
+                .executeUpdate();
+
+        entityManager.createQuery("DELETE FROM MandatoryPayment mp WHERE mp.credit.id = :id")
+                .setParameter("id", id)
+                .executeUpdate();
+
+        entityManager.createQuery("DELETE FROM Payment p WHERE p.credit.id = :id")
+                .setParameter("id", id)
+                .executeUpdate();
+
+        int deletedCount = entityManager.createQuery("DELETE FROM Credit c WHERE c.id = :id")
+                .setParameter("id", id)
+                .executeUpdate();
+
+        if (deletedCount == 0) {
+            throw new Exception("Credit with id " + id + " not found");
+        }
     }
 
     @Transactional
@@ -209,5 +245,20 @@ public class CreditService {
         List<Credit> queryResult = nativeQuery.getResultList();
 
         return queryResult.stream().map(this::convertToCreditDetailDTO).toList();
+    }
+
+    @Scheduled(cron = "0 0 0 * * ?")
+    @Transactional
+    public void accrueDailyInterest() {
+        List<Credit> credits = creditRepository.findAll();
+        for (Credit credit : credits) {
+            if (credit.getStatus() == Credit.Status.ACTIVE) {
+                RemainingDebt remainingDebt = credit.getRemainingDebt();
+                double dailyRate = credit.getTariff().getInterestRate() / 36500.0;
+                double interest = remainingDebt.getRemainingAmount() * dailyRate;
+                remainingDebt.setRemainingAmount(remainingDebt.getRemainingAmount() + interest);
+                remainingDebtRepository.save(remainingDebt);
+            }
+        }
     }
 }

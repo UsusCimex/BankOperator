@@ -6,6 +6,8 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.PastOrPresent;
 import jakarta.validation.constraints.Positive;
 import lombok.Data;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -51,10 +53,13 @@ public class Credit {
     @Column(name = "end_date")
     private LocalDate endDate;
 
-    @OneToOne(mappedBy = "credit", fetch = FetchType.LAZY)
+    @OneToOne(mappedBy = "credit", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private MandatoryPayment mandatoryPayment;
 
-    @OneToMany(fetch = FetchType.EAGER, mappedBy = "credit")
+    @OneToOne(mappedBy = "credit", cascade = CascadeType.ALL, orphanRemoval = true)
+    private RemainingDebt remainingDebt;
+
+    @OneToMany(mappedBy = "credit", cascade = CascadeType.ALL, fetch = FetchType.EAGER, orphanRemoval = true)
     private List<Payment> payments;
 
     public static Status convertStringToStatus(String statusStr) {
