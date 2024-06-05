@@ -23,6 +23,9 @@ public class MandatoryPayment {
     @Column(name = "amount")
     private Double amount;
 
+    @Column(name = "payment_amount")
+    private Double paymentAmount;
+
     @Column(name = "loan_term")
     private Integer loanTerm;
 

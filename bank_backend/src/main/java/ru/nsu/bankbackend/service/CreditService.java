@@ -40,7 +40,7 @@ public class CreditService {
         dto.setAmount(credit.getAmount());
         RemainingDebt remainingDebt = credit.getRemainingDebt();
         if (remainingDebt != null) {
-            dto.setRemainingAmount(remainingDebt.getRemainingAmount());
+            dto.setRemainingAmount(remainingDebt.getRemainingAmount() - credit.getMandatoryPayment().getPaymentAmount());
         } else {
             dto.setRemainingAmount(0.0); // Или любое другое значение по умолчанию
         }
@@ -104,12 +104,13 @@ public class CreditService {
             MandatoryPayment payment = new MandatoryPayment();
             Tariff tariff = credit.getTariff();
             payment.setCredit(credit);
-            Double initialAmount = credit.getAmount() / tariff.getLoanTerm() +
-                    credit.getAmount() * tariff.getInterestRate() / (tariff.getLoanTerm() * 100.0);
+            Double monthPercent = tariff.getInterestRate() / 1200.0;
+            Double initialAmount = credit.getAmount() * monthPercent / (1 - Math.pow(1 + monthPercent, -tariff.getLoanTerm()));
             payment.setAmount(initialAmount);
+            payment.setPaymentAmount(0.0);
             payment.setDueDate(credit.getStartDate().plusMonths(1));
             payment.setLoanTerm(tariff.getLoanTerm());
-            mandatoryPaymentRepository.save(payment);
+            credit.setMandatoryPayment(mandatoryPaymentRepository.save(payment));
         }
     }
 
@@ -250,6 +251,7 @@ public class CreditService {
     @Scheduled(cron = "0 0 0 * * ?")
     @Transactional
     public void accrueDailyInterest() {
+        System.err.println("I'm here");
         List<Credit> credits = creditRepository.findAll();
         for (Credit credit : credits) {
             if (credit.getStatus() == Credit.Status.ACTIVE) {

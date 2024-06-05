@@ -23,6 +23,7 @@ function CreditPage() {
     client: null,
     tariff: null,
     amount: '',
+    remainingAmount: '',
     status: '',
     startDate: ''
   });
@@ -41,7 +42,8 @@ function CreditPage() {
           client: { label: `${data.clientName}`, value: data.clientId },
           tariff: { label: `${data.tariffName}`, value: data.tariffId },
           status: data.status,
-          startDate: data.startDate
+          startDate: data.startDate,
+          remainingAmount: data.remainingAmount
         });        
 
         const paymentsData = await getCreditPayments(creditId);
@@ -82,11 +84,19 @@ function CreditPage() {
   };
 
   const handleDelete = async () => {
-    try {
-      await deleteCredit(creditId);
-      navigate('/credits');
-    } catch (error) {
-      setError("Failed to delete credit: " + error.message);
+    const confirmDelete = window.confirm('Are you sure you want to delete this credit?');
+    if (confirmDelete) {
+      setLoading(true);
+      try {
+        await deleteCredit(creditId);
+        alert('Client deleted successfully');
+        navigate('/credits');
+      } catch (error) {
+        console.error("Delete error:", error);
+        setError(`Failed to delete credit\nError: ${error.message}`);
+      } finally {
+        setLoading(false);
+      }
     }
   };
 
@@ -191,7 +201,7 @@ function CreditPage() {
           placeholder="Select Tariff"
         />
 
-        <label htmlFor="amount">Amount:</label>
+        <label htmlFor="amount">Initial Amount:</label>
         <input
           className="input"
           id="amount"
@@ -216,12 +226,13 @@ function CreditPage() {
         <input
           className="input"
           id="startDate"
-          type="datetime"
+          type="date"
           name="startDate"
           value={credit.startDate}
           onChange={handleChange}
         />
 
+        <p>Remaining Debt: {credit.remainingAmount || 'N/A'}</p>
         <p>Mandatory Payment Amount: {credit.mandatoryPaymentAmount || 'N/A'}</p>
         <p>Mandatory Payment End Date: {credit.mandatoryPaymentDate || 'N/A'}</p>
         <p>Mandatory Penalty: {credit.mandatoryPenalty || 'N/A'}</p>
@@ -237,7 +248,7 @@ function CreditPage() {
           <Link to={`/payments/${payment.id}`} key={`payment${payment.id}`} className="history-button">
             <div className="history-content">
               <div>Amount: {payment.amount}</div>
-              <div>Date: {new Date(payment.date).toLocaleDateString()}</div>
+              <div>Date: {new Date(payment.paymentDate).toLocaleDateString()}</div>
               <div>Type: {payment.paymentType}</div>
               <div>Commission: {payment.commission}</div>
             </div>

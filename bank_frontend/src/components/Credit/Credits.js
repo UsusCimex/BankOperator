@@ -250,7 +250,8 @@ function Credits() {
           <div key={credit.id} className="item-card" onClick={() => navigate(`/credits/${credit.id}`)}>
             <p>Client: {credit.clientName}</p>
             <p>Tariff: {credit.tariffName}</p>
-            <p>Amount: {credit.amount}</p>
+            <p>Initial Amount: {credit.amount}</p>
+            <p>Remaining Debt: {credit.remainingAmount}</p>
             <p>Status: {credit.status}</p>
             <p>Start Date: {credit.startDate}</p>
             <p>End Date: {credit.endDate}</p>

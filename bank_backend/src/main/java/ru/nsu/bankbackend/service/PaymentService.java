@@ -63,10 +63,8 @@ public class PaymentService {
     @Transactional
     public void processPayment(Payment payment) {
         Credit credit = payment.getCredit();
-        Tariff tariff = credit.getTariff();
         MandatoryPayment mandatoryPayment = credit.getMandatoryPayment();
         Penalty penalty = mandatoryPayment.getPenalty();
-        RemainingDebt remainingDebt = credit.getRemainingDebt();
 
         Double realAmount = payment.getAmount() / (1.0 + payment.getPaymentType().getCommission() / 100.0);
 
@@ -85,23 +83,10 @@ public class PaymentService {
         }
         mandatoryPaymentRepository.save(mandatoryPayment);
 
-        if (remainingDebt != null) {
-            remainingDebt.setRemainingAmount(remainingDebt.getRemainingAmount() - realAmount);
-            remainingDebtRepository.save(remainingDebt);
-        }
+        mandatoryPayment.setPaymentAmount(mandatoryPayment.getPaymentAmount() + realAmount);
 
-        while (mandatoryPayment.getAmount() <= 0.0) {
-            if (mandatoryPayment.getLoanTerm() > 0) {
-                mandatoryPayment.setLoanTerm(mandatoryPayment.getLoanTerm() - 1);
-                Double newAmount = credit.getAmount() / tariff.getLoanTerm() +
-                        credit.getAmount() * tariff.getInterestRate() / (tariff.getLoanTerm() * 100.0);
-                mandatoryPayment.setAmount(newAmount + mandatoryPayment.getAmount());
-                mandatoryPayment.setDueDate(mandatoryPayment.getDueDate().plusMonths(1));
-                mandatoryPaymentRepository.save(mandatoryPayment);
-            }
-        }
-
-        if (remainingDebt != null && remainingDebt.getRemainingAmount() <= 0.0) {
+        RemainingDebt remainingDebt = credit.getRemainingDebt();
+        if (remainingDebt.getRemainingAmount() - mandatoryPayment.getPaymentAmount() <= 0) {
             credit.setStatus(Credit.Status.CLOSED);
             remainingDebtRepository.delete(remainingDebt);
             credit.setRemainingDebt(null);
